@@ -534,6 +534,8 @@ function decimalToInt(vol) {
     return vol * 100;
 }
 
+let recentTracks = [];
+
 function updateNowPlaying() {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
@@ -545,12 +547,20 @@ function updateNowPlaying() {
                     ? source[0].yp_currently_playing
                     : source.yp_currently_playing;
 
-                document.getElementById("customNowPlaying").innerText =
-                    currentlyPlaying || "No track info available.";
+                if (!currentlyPlaying) return;
+
+                // Update now playing display
+                document.getElementById("customNowPlaying").innerText = currentlyPlaying;
+
+                // Avoid duplicates and update recent tracks
+                if (recentTracks[0] !== currentlyPlaying) {
+                    recentTracks.unshift(currentlyPlaying); // Add to beginning
+                    if (recentTracks.length > 3) recentTracks.pop(); // Keep only last 3
+                    updateRecentTracksUI();
+                }
             } catch (e) {
                 console.error("Error parsing JSON:", e);
-                document.getElementById("customNowPlaying").innerText =
-                    "Error loading track info.";
+                document.getElementById("customNowPlaying").innerText = "Error loading track info.";
             }
         }
     };
@@ -558,6 +568,16 @@ function updateNowPlaying() {
     xhttp.send();
 }
 
-// Call it once and then every 30 seconds
+function updateRecentTracksUI() {
+    const list = document.getElementById("recentTracksList");
+    list.innerHTML = ""; // Clear old list
+    recentTracks.slice(1).forEach(track => { // Skip the currently playing
+        const li = document.createElement("li");
+        li.textContent = track;
+        list.appendChild(li);
+    });
+}
+
+// Initial call and interval
 updateNowPlaying();
 setInterval(updateNowPlaying, 30000);
