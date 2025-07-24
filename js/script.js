@@ -331,37 +331,24 @@ function mute() {
     }
 }
 
-function getStreamingData() {
+
+function getCurrentlyPlaying() {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
         if (this.readyState === 4 && this.status === 200) {
-            if (this.response.length === 0) {
-                console.log('%cdebug', 'font-size: 22px');
-            }
-
-            var data = JSON.parse(this.responseText);
-            console.log('Received data:', data); // Add this line for debugging
-
-            var page = new Page();
-
-            // Formating characters to UTF-8
-            let song = data.song ? data.song.replace(/&apos;/g, '\'') : '';
-            let artist = data.artist ? data.artist.replace(/&apos;/g, '\'') : '';
-
-            // Change the title
-            document.title = song + ' - ' + artist + ' | ' + RADIO_NAME;
-
-            if (document.getElementById('currentSong').innerHTML !== song) {
-                page.refreshCover(song, artist);
-                page.refreshCurrentSong(song, artist);
-                page.refreshLyric(song, artist);
-
-                for (var i = 0; i < 2; i++) {
-                    page.refreshHistoric(data.history[i], i);
-                }
+            try {
+                var data = JSON.parse(this.responseText);
+                var currentlyPlaying = data.icestats.source["yp_currently_playing"];
+                console.log("Currently Playing:", currentlyPlaying);
+            } catch (e) {
+                console.error("Error parsing JSON or accessing data:", e);
             }
         }
     };
+    xhttp.open("GET", "https://wrcj.streamguys1.com/status-json.xsl", true);
+    xhttp.send();
+}
+
 
     var d = new Date();
 
