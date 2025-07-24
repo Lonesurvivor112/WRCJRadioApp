@@ -388,7 +388,6 @@ function getStreamingData() {
                     page.refreshHistoric(data.history[i], i);
                 }
             }
-        }
     };
 
     var d = new Date();
