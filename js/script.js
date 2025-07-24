@@ -1,5 +1,3 @@
-
-
 const RADIO_NAME = 'WRCJ Radio';
 
 // SELECT ARTWORK PROVIDER, ITUNES, DEEZER & SPOTIFY  eg : spotify 
