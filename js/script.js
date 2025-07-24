@@ -1,6 +1,6 @@
 
 
-const RADIO_NAME = 'Game! Radio 1';
+const RADIO_NAME = 'WRCJ Radio';
 
 // SELECT ARTWORK PROVIDER, ITUNES, DEEZER & SPOTIFY  eg : spotify 
 var API_SERVICE = 'deezer';
@@ -536,6 +536,21 @@ function decimalToInt(vol) {
 
 let recentTracks = [];
 
+function loadRecentTracks() {
+    const stored = localStorage.getItem("recentTracks");
+    if (stored) {
+        const parsed = JSON.parse(stored);
+        const now = Date.now();
+        // Filter out tracks older than 7 days
+        recentTracks = parsed.filter(item => now - item.timestamp < 7 * 24 * 60 * 60 * 1000);
+        updateRecentTracksUI();
+    }
+}
+
+function saveRecentTracks() {
+    localStorage.setItem("recentTracks", JSON.stringify(recentTracks));
+}
+
 function updateNowPlaying() {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
@@ -549,13 +564,15 @@ function updateNowPlaying() {
 
                 if (!currentlyPlaying) return;
 
-                // Update now playing display
                 document.getElementById("customNowPlaying").innerText = currentlyPlaying;
 
-                // Avoid duplicates and update recent tracks
-                if (recentTracks[0] !== currentlyPlaying) {
-                    recentTracks.unshift(currentlyPlaying); // Add to beginning
-                    if (recentTracks.length > 3) recentTracks.pop(); // Keep only last 3
+                if (recentTracks.length === 0 || recentTracks[0].track !== currentlyPlaying) {
+                    recentTracks.unshift({
+                        track: currentlyPlaying,
+                        timestamp: Date.now()
+                    });
+                    if (recentTracks.length > 5) recentTracks.pop();
+                    saveRecentTracks();
                     updateRecentTracksUI();
                 }
             } catch (e) {
@@ -570,14 +587,16 @@ function updateNowPlaying() {
 
 function updateRecentTracksUI() {
     const list = document.getElementById("recentTracksList");
-    list.innerHTML = ""; // Clear old list
-    recentTracks.slice(1).forEach(track => { // Skip the currently playing
+    list.innerHTML = "";
+    recentTracks.slice(1).forEach(item => {
         const li = document.createElement("li");
-        li.textContent = track;
+        li.textContent = item.track;
         list.appendChild(li);
     });
 }
 
-// Initial call and interval
+// Load from localStorage on page load
+loadRecentTracks();
 updateNowPlaying();
 setInterval(updateNowPlaying, 30000);
+
