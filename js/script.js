@@ -11,6 +11,8 @@ const URL_STREAMING = 'https://wrcj.streamguys1.com/live.aac';
 //NOW PLAYING API.
 const API_URL = 'https://wrcj.streamguys1.com/status-json.xsl';
 
+// Visit https://api.vagalume.com.br/docs/ to get your API key
+const API_KEY = "18fe07917957c289983464588aabddfb";
 
 window.onload = function () {
     var page = new Page;
@@ -59,6 +61,7 @@ function Page() {
             currentArtist.innerHTML = artist;
 
             // Refresh modal title
+            document.getElementById('lyricsSong').innerHTML = song + ' - ' + artist;
 
             // Remove animation classes
             setTimeout(function () {
@@ -100,6 +103,7 @@ function Page() {
             $historicDiv[n].classList.add('animated');
             $historicDiv[n].classList.add('slideInRight');
         }
+        xhttp.open('GET', 'https://prod-api.radioapi.me/1ceb9727-3e36-4e64-99e7-f776b50c7f4f/musicsearch?query=' + info.artist + ' ' + info.song);
         xhttp.send();
 
         setTimeout(function () {
@@ -173,6 +177,7 @@ function Page() {
                 }
             }
         }
+        xhttp.open('GET', 'https://prod-api.radioapi.me/1ceb9727-3e36-4e64-99e7-f776b50c7f4f/musicsearch?query=' + artist + ' ' + song);
         xhttp.send();
     }
 
@@ -192,9 +197,35 @@ function Page() {
         }
     }
 
+    this.refreshLyric = function (currentSong, currentArtist) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+                var data = JSON.parse(this.responseText);
+
+                var openLyric = document.getElementsByClassName('lyrics')[0];
+
+                if (data.type === 'exact' || data.type === 'aprox') {
+                    var lyric = data.mus[0].text;
+
+                    document.getElementById('lyric').innerHTML = lyric.replace(/\n/g, '<br />');
+                    openLyric.style.opacity = "1";
+                    openLyric.setAttribute('data-toggle', 'modal');
+                } else {
+                    openLyric.style.opacity = "0.3";
+                    openLyric.removeAttribute('data-toggle');
+
+                    var modalLyric = document.getElementById('modalLyrics');
+                    modalLyric.style.display = "none";
+                    modalLyric.setAttribute('aria-hidden', 'true');
+                    (document.getElementsByClassName('modal-backdrop')[0]) ? document.getElementsByClassName('modal-backdrop')[0].remove(): '';
+                }
             } else {
+                document.getElementsByClassName('lyrics')[0].style.opacity = "0.3";
+                document.getElementsByClassName('lyrics')[0].removeAttribute('data-toggle');
             }
         }
+        xhttp.open('GET', 'https://api.vagalume.com.br/search.php?apikey=' + API_KEY + '&art=' + currentArtist + '&mus=' + currentSong.toLowerCase(), true);
         xhttp.send()
     }
 }
@@ -267,13 +298,6 @@ document.getElementById('volume').oninput = function () {
     page.changeVolumeIndicator(this.value);
 }
 
-function togglePlay() {
-    if (!audio.paused) {
-        audio.pause();
-    } else {
-        audio.load();
-        audio.play();
-    }
 }
 
 function volumeUp() {
@@ -309,13 +333,6 @@ function mute() {
     }
 }
 
-function getStreamingData() {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function () {
-        if (this.readyState === 4 && this.status === 200) {
-            if (this.response.length === 0) {
-                console.log('%cdebug', 'font-size: 22px');
-            }
 
             var data = JSON.parse(this.responseText);
             console.log('Received data:', data); // Add this line for debugging
@@ -512,3 +529,47 @@ function intToDecimal(vol) {
 function decimalToInt(vol) {
     return vol * 100;
 }
+
+
+function togglePlay() {
+    if (!audio.paused) {
+        audio.pause();
+    } else {
+        audio.load();
+        audio.play();
+    }
+}
+
+
+
+function getStreamingData() {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+        if (this.readyState === 4 && this.status === 200) {
+            var data = JSON.parse(this.responseText);
+            var sources = data.icestats.source;
+            var matchedSource = null;
+
+            if (Array.isArray(sources)) {
+                matchedSource = sources.find(src => src.server_name === "WRCJ-AAC");
+            } else {
+                matchedSource = sources;
+            }
+
+            var song = "Unknown Title";
+            var artist = "Unknown Artist";
+
+            if (matchedSource && matchedSource.title) {
+                var parts = matchedSource.title.split(" - ");
+                artist = parts[0] || "Unknown Artist";
+                song = parts[1] || "Unknown Title";
+            }
+
+            var page = new Page();
+            page.refreshCurrentSong(song, artist);
+        }
+    };
+    xhttp.open('GET', API_URL, true);
+    xhttp.send();
+}
+
