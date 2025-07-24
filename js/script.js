@@ -1,6 +1,6 @@
 
 
-const RADIO_NAME = 'WRCJ Radio';
+const RADIO_NAME = 'Game! Radio 1';
 
 // SELECT ARTWORK PROVIDER, ITUNES, DEEZER & SPOTIFY  eg : spotify 
 var API_SERVICE = 'deezer';
@@ -94,7 +94,7 @@ function Page() {
             $historicDiv[n].classList.add('animated');
             $historicDiv[n].classList.add('slideInRight');
         }
-        xhttp.open('GET', 'https://prod-api.radioapi.me/1ceb9727-3e36-4e64-99e7-f776b50c7f4f/musicsearch?query=' + info.artist + ' ' + info.song);
+        xhttp.open('GET', 'https://wrcj.streamguys1.com/status-json.xsl' + info.artist + ' ' + info.song);
         xhttp.send();
 
         setTimeout(function () {
@@ -335,37 +335,9 @@ function getStreamingData() {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
         if (this.readyState === 4 && this.status === 200) {
-            var data = JSON.parse(this.responseText);
-            var sources = data.icestats.source;
-            var matchedSource = null;
-
-            if (Array.isArray(sources)) {
-                matchedSource = sources.find(src => src.server_name === "WRCJ-AAC");
-            } else {
-                matchedSource = sources;
+            if (this.response.length === 0) {
+                console.log('%cdebug', 'font-size: 22px');
             }
-
-            var song = "Unknown Title";
-            var artist = "Unknown Artist";
-
-            if (matchedSource && matchedSource.title) {
-                var parts = matchedSource.title.split(" - ");
-                artist = parts[0] || "Unknown Artist";
-                song = parts[1] || "Unknown Title";
-            }
-
-            var page = new Page();
-            document.title = song + ' - ' + artist + ' | ' + RADIO_NAME;
-            if (document.getElementById('currentSong').innerHTML !== song) {
-                page.refreshCover(song, artist);
-                page.refreshCurrentSong(song, artist);
-                page.refreshLyric(song, artist);
-            }
-        }
-    };
-    xhttp.open('GET', 'https://wrcj.streamguys1.com/status-json.xsl');
-    xhttp.send();
-}
 
             var data = JSON.parse(this.responseText);
             console.log('Received data:', data); // Add this line for debugging
@@ -388,6 +360,7 @@ function getStreamingData() {
                     page.refreshHistoric(data.history[i], i);
                 }
             }
+        }
     };
 
     var d = new Date();
