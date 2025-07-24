@@ -6,7 +6,7 @@ const RADIO_NAME = 'Game! Radio 1';
 var API_SERVICE = 'deezer';
 
 // Change Stream URL Here, Supports, ICECAST, ZENO, SHOUTCAST, RADIOJAR ETC.... DOES NOT SUPPORT HLS
-const URL_STREAMING = 'https://stream-51.zeno.fm/cfhkm5fs1uhvv?zs=HOu6hxV1SG-7iGi9WGVTqQ';
+const URL_STREAMING = 'https://www.wrcjfm.org/';
 
 //NOW PLAYING API.
 const API_URL = 'https://prod-api.radioapi.me/streamtitle/8ce17c30-2fc5-4f1d-a6d8-4ac3ca9b35b6';
