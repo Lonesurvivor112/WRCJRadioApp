@@ -23,6 +23,15 @@ window.onload = function () {
     player.play();
 
     getStreamingData();
+if (!matchedSource || !matchedSource.title) {
+    song = "Unknown Title";
+    artist = "Unknown Artist";
+} else {
+    var title = matchedSource.title;
+    var parts = title.split(" - ");
+    artist = parts[0] || "Unknown Artist";
+    song = parts[1] || "Unknown Title";
+}
     // Interval to get streaming data in miliseconds
     setInterval(function () {
         getStreamingData();
