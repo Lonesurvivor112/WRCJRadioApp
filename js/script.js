@@ -23,15 +23,6 @@ window.onload = function () {
     player.play();
 
     getStreamingData();
-if (!matchedSource || !matchedSource.title) {
-    song = "Unknown Title";
-    artist = "Unknown Artist";
-} else {
-    var title = matchedSource.title;
-    var parts = title.split(" - ");
-    artist = parts[0] || "Unknown Artist";
-    song = parts[1] || "Unknown Title";
-}
     // Interval to get streaming data in miliseconds
     setInterval(function () {
         getStreamingData();
@@ -298,6 +289,13 @@ document.getElementById('volume').oninput = function () {
     page.changeVolumeIndicator(this.value);
 }
 
+function togglePlay() {
+    if (!audio.paused) {
+        audio.pause();
+    } else {
+        audio.load();
+        audio.play();
+    }
 }
 
 function volumeUp() {
@@ -333,6 +331,41 @@ function mute() {
     }
 }
 
+function getStreamingData() {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+        if (this.readyState === 4 && this.status === 200) {
+            var data = JSON.parse(this.responseText);
+            var sources = data.icestats.source;
+            var matchedSource = null;
+
+            if (Array.isArray(sources)) {
+                matchedSource = sources.find(src => src.server_name === "WRCJ-AAC");
+            } else {
+                matchedSource = sources;
+            }
+
+            var song = "Unknown Title";
+            var artist = "Unknown Artist";
+
+            if (matchedSource && matchedSource.title) {
+                var parts = matchedSource.title.split(" - ");
+                artist = parts[0] || "Unknown Artist";
+                song = parts[1] || "Unknown Title";
+            }
+
+            var page = new Page();
+            document.title = song + ' - ' + artist + ' | ' + RADIO_NAME;
+            if (document.getElementById('currentSong').innerHTML !== song) {
+                page.refreshCover(song, artist);
+                page.refreshCurrentSong(song, artist);
+                page.refreshLyric(song, artist);
+            }
+        }
+    };
+    xhttp.open('GET', 'https://wrcj.streamguys1.com/status-json.xsl');
+    xhttp.send();
+}
 
             var data = JSON.parse(this.responseText);
             console.log('Received data:', data); // Add this line for debugging
@@ -529,47 +562,3 @@ function intToDecimal(vol) {
 function decimalToInt(vol) {
     return vol * 100;
 }
-
-
-function togglePlay() {
-    if (!audio.paused) {
-        audio.pause();
-    } else {
-        audio.load();
-        audio.play();
-    }
-}
-
-
-
-function getStreamingData() {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function () {
-        if (this.readyState === 4 && this.status === 200) {
-            var data = JSON.parse(this.responseText);
-            var sources = data.icestats.source;
-            var matchedSource = null;
-
-            if (Array.isArray(sources)) {
-                matchedSource = sources.find(src => src.server_name === "WRCJ-AAC");
-            } else {
-                matchedSource = sources;
-            }
-
-            var song = "Unknown Title";
-            var artist = "Unknown Artist";
-
-            if (matchedSource && matchedSource.title) {
-                var parts = matchedSource.title.split(" - ");
-                artist = parts[0] || "Unknown Artist";
-                song = parts[1] || "Unknown Title";
-            }
-
-            var page = new Page();
-            page.refreshCurrentSong(song, artist);
-        }
-    };
-    xhttp.open('GET', API_URL, true);
-    xhttp.send();
-}
-
