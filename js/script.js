@@ -584,15 +584,33 @@ function updateNowPlaying() {
     xhttp.open("GET", "https://wrcj.streamguys1.com/status-json.xsl", true);
     xhttp.send();
 }
-
 function updateRecentTracksUI() {
     const list = document.getElementById("recentTracksList");
     list.innerHTML = "";
+
     recentTracks.slice(1).forEach(item => {
         const li = document.createElement("li");
-        li.textContent = item.track;
+
+        const timeAgo = getTimeAgo(item.timestamp);
+        li.textContent = `${item.track} (${timeAgo})`;
+
         list.appendChild(li);
     });
+}
+
+function getTimeAgo(timestamp) {
+    const now = Date.now();
+    const diff = now - timestamp;
+
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    return `just now`;
 }
 
 // Load from localStorage on page load
