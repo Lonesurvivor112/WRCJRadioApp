@@ -9,7 +9,7 @@ var API_SERVICE = 'deezer';
 const URL_STREAMING = 'https://wrcj.streamguys1.com/live.aac';
 
 //NOW PLAYING API.
-const API_URL = 'https://prod-api.radioapi.me/streamtitle/8ce17c30-2fc5-4f1d-a6d8-4ac3ca9b35b6';
+const API_URL = 'https://wrcj.streamguys1.com/status-json.xsl';
 
 // Visit https://api.vagalume.com.br/docs/ to get your API key
 const API_KEY = "18fe07917957c289983464588aabddfb";
@@ -331,43 +331,45 @@ function mute() {
     }
 }
 
+
 function getStreamingData() {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
         if (this.readyState === 4 && this.status === 200) {
-            if (this.response.length === 0) {
-                console.log('%cdebug', 'font-size: 22px');
+            var data = JSON.parse(this.responseText);
+            var sources = data.icestats.source;
+            var title = "";
+
+            if (Array.isArray(sources)) {
+                title = sources[0].title;
+            } else {
+                title = sources.title;
             }
 
-            var data = JSON.parse(this.responseText);
-            console.log('Received data:', data); // Add this line for debugging
+            var artist = "";
+            var song = title;
+
+            if (title.includes(" - ")) {
+                var parts = title.split(" - ");
+                artist = parts[0].trim();
+                song = parts.slice(1).join(" - ").trim();
+            }
 
             var page = new Page();
-
-            // Formating characters to UTF-8
-            let song = data.song ? data.song.replace(/&apos;/g, '\'') : '';
-            let artist = data.artist ? data.artist.replace(/&apos;/g, '\'') : '';
-
-            // Change the title
             document.title = song + ' - ' + artist + ' | ' + RADIO_NAME;
 
             if (document.getElementById('currentSong').innerHTML !== song) {
                 page.refreshCover(song, artist);
                 page.refreshCurrentSong(song, artist);
                 page.refreshLyric(song, artist);
-
-                for (var i = 0; i < 2; i++) {
-                    page.refreshHistoric(data.history[i], i);
-                }
             }
         }
     };
 
-    var d = new Date();
-
-    // Requisition with timestamp to prevent cache on mobile devices
     xhttp.open('GET', API_URL);
     xhttp.send();
+}
+
 }
 
 // Player control by keys
