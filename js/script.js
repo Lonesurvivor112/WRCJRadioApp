@@ -533,3 +533,31 @@ function intToDecimal(vol) {
 function decimalToInt(vol) {
     return vol * 100;
 }
+
+function updateNowPlaying() {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+        if (this.readyState === 4 && this.status === 200) {
+            try {
+                var data = JSON.parse(this.responseText);
+                let source = data.icestats.source;
+                let currentlyPlaying = Array.isArray(source)
+                    ? source[0].yp_currently_playing
+                    : source.yp_currently_playing;
+
+                document.getElementById("customNowPlaying").innerText =
+                    currentlyPlaying || "No track info available.";
+            } catch (e) {
+                console.error("Error parsing JSON:", e);
+                document.getElementById("customNowPlaying").innerText =
+                    "Error loading track info.";
+            }
+        }
+    };
+    xhttp.open("GET", "https://wrcj.streamguys1.com/status-json.xsl", true);
+    xhttp.send();
+}
+
+// Call it once and then every 30 seconds
+updateNowPlaying();
+setInterval(updateNowPlaying, 30000);
