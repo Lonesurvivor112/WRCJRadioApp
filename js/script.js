@@ -19,7 +19,7 @@ window.onload = function () {
     page.changeTitlePage();
     page.setVolume();
     window.addEventListener("load", showDeezerCoverArt);
-
+    showDeezerCoverArt();
 
     var player = new Player();
     player.play();
@@ -27,6 +27,7 @@ window.onload = function () {
     getStreamingData();
     // Interval to get streaming data in miliseconds
     setInterval(function () {
+        showDeezerCoverArt();
         getStreamingData();
     }, 10000);
 
