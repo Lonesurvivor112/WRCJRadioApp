@@ -613,6 +613,59 @@ function getTimeAgo(timestamp) {
     return `just now`;
 }
 
+function showDeezerCoverArt() {
+    const streamUrl = "https://wrcj.streamguys1.com/status-json.xsl";
+
+    fetch(streamUrl)
+        .then(response => response.json())
+        .then(data => {
+            let source = data.icestats.source;
+            let currentlyPlaying = Array.isArray(source)
+                ? source[0].yp_currently_playing
+                : source.yp_currently_playing;
+
+            if (!currentlyPlaying) return;
+
+            const query = encodeURIComponent(currentlyPlaying);
+            const deezerUrl = `https://api.deezer.com/search?q=${query}`;
+            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(deezerUrl)}`;
+
+            fetch(proxyUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.data && data.data.length > 0) {
+                        const albumCover = data.data[0].album.cover_medium;
+
+                        const coverArt = document.getElementById('currentCoverArt');
+                        if (coverArt) {
+                            // Clear any existing children
+                            coverArt.innerHTML = '';
+
+                            // Create and style the image
+                            const img = document.createElement("img");
+                            img.src = albumCover;
+                            img.style.width = "100%";
+                            img.style.height = "100%";
+                            img.style.objectFit = "cover";
+                            img.style.borderRadius = "8px"; // optional
+                            img.style.display = "block";
+
+                            // Append to the coverArt container
+                            coverArt.appendChild(img);
+                        }
+                    } else {
+                        console.log("No album art found for:", currentlyPlaying);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching album art from Deezer:", error);
+                });
+        })
+        .catch(error => {
+            console.error("Error fetching stream metadata:", error);
+        });
+}
+
 // Load from localStorage on page load
 loadRecentTracks();
 updateNowPlaying();
