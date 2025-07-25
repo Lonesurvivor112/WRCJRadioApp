@@ -811,20 +811,6 @@ function isLikelyClassical(trackName) {
     return classicalKeywords.some(keyword => trackLower.includes(keyword));
 }
 
-function isLikelyClassical(trackName) {
-    const classicalKeywords = [
-        'symphony', 'concerto', 'sonata', 'quartet', 'quintet', 'opus', 'op.', 'op6',
-        'movement', 'allegro', 'andante', 'adagio', 'presto', 'largo', 'vivace',
-        'bach', 'mozart', 'beethoven', 'chopin', 'brahms', 'tchaikovsky', 
-        'vivaldi', 'handel', 'haydn', 'schubert', 'liszt', 'debussy', 'ravel',
-        'concerto grosso', 'brandenburg', 'partita', 'prelude', 'fugue', 'suite',
-        'no.', 'bwv', 'k.', 'hob', 'woo'
-    ];
-    
-    const trackLower = trackName.toLowerCase();
-    return classicalKeywords.some(keyword => trackLower.includes(keyword));
-}
-
 function guessEraFromComposer(composer) {
     const composerLower = composer.toLowerCase();
     
