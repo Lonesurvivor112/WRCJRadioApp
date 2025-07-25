@@ -18,14 +18,16 @@ window.onload = function () {
     var page = new Page;
     page.changeTitlePage();
     page.setVolume();
-
     var player = new Player();
     player.play();
-
     getStreamingData();
+	
+	// Fetch album Art from deezer using yp_currently_playing
+	updateCoverArtFromYP();
     // Interval to get streaming data in miliseconds
     setInterval(function () {
         getStreamingData();
+		updateCoverArtFromYP(); // Refresh every 10 seconds 
     }, 10000);
 
     var coverArt = document.getElementsByClassName('cover-album')[0];
@@ -594,6 +596,7 @@ loadRecentTracks();
 updateNowPlaying();
 setInterval(updateNowPlaying, 30000);
 
+
 function fetchAlbumArtFromDeezer(songName) {
     const query = encodeURIComponent(songName);
     const deezerUrl = `https://api.deezer.com/search?q=${query}`;
@@ -604,10 +607,11 @@ function fetchAlbumArtFromDeezer(songName) {
         .then(data => {
             if (data.data && data.data.length > 0) {
                 const albumCover = data.data[0].album.cover_medium;
+
                 const coverArt = document.getElementById('currentCoverArt');
                 const coverBackground = document.getElementById('bgCover');
 
-                if (coverArt) coverArt.style.backgroundImage = `url('${albumCover}')`;
+                if (coverArt) coverArt.src = albumCover;
                 if (coverBackground) coverBackground.style.backgroundImage = `url('${albumCover}')`;
             } else {
                 console.log("No album art found for:", songName);
@@ -616,5 +620,45 @@ function fetchAlbumArtFromDeezer(songName) {
         .catch(error => {
             console.error("Error fetching album art from Deezer:", error);
         });
+
+function updateCoverArtFromYP() {
+    const xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+        if (this.readyState === 4 && this.status === 200) {
+            try {
+                const data = JSON.parse(this.responseText);
+                let source = data.icestats.source;
+                let currentlyPlaying = Array.isArray(source) ? source[0].yp_currently_playing : source.yp_currently_playing;
+
+                if (!currentlyPlaying) return;
+
+                const query = encodeURIComponent(currentlyPlaying);
+                const deezerUrl = `https://api.deezer.com/search?q=${query}`;
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(deezerUrl)}`;
+
+                fetch(proxyUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.data && data.data.length > 0) {
+                            const albumCover = data.data[0].album.cover_medium;
+                            const coverArt = document.getElementById('currentCoverArt');
+                            if (coverArt) {
+                                coverArt.style.backgroundImage = `url('${albumCover}')`;
+                            }
+                        } else {
+                            console.log("No album art found for:", currentlyPlaying);
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error fetching album art from Deezer:", error);
+                    });
+            } catch (e) {
+                console.error("Error parsing JSON:", e);
+            }
+        }
+    };
+    xhttp.open("GET", "https://wrcj.streamguys1.com/status-json.xsl", true);
+    xhttp.send();
 }
 
+}
