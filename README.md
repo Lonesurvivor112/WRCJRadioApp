@@ -1,5 +1,7 @@
-
-# HTML5 Icecast/Shoutcast/Zeno Full Page Radio Player
+# OG Script Credits to https://github.com/joeyboli/RadioPlayer
+# Fully Modified script to play WRCJ Radio, Report current artist and title, Album cover (Using Deezer)
+# Custom Built Functions to extract yp_currently_playing from status-json.xsl
+# yp_currently_playing is pasted into Deezers NO API URL Example: https://api.deezer.com/search?q=%22Franz%20Joseph%20Haydn%20-%20Trumpet%20Concerto%22
 
 # Documentation.
 
@@ -19,6 +21,7 @@ const URL_STREAMING = 'https://wrcj.streamguys1.com/live.aac';
 // Change API URL to https://wrcj.streamguys1.com/status-json.xsl
 
 // Custom Built function to pull from .xsl
+
 
 // Reports on HTML Page from .xsl
 
