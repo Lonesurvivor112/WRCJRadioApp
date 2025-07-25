@@ -106,8 +106,47 @@ function Page() {
     }
 
     this.refreshCover = function (song = '', artist) {
-    fetchAlbumArtFromDeezer(`${artist} ${song}`);
-    }
+    var urlCoverArt = 'img/cover.png'; // default fallback
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+        if (this.readyState === 4 && this.status === 200) {
+            var data = JSON.parse(this.responseText);
+            if (data.data && data.data.length > 0) {
+                var track = data.data[0];
+                urlCoverArt = track.album.cover_medium; // or cover_big / cover_xl
+
+                var coverArt = document.getElementById('currentCoverArt');
+                var coverBackground = document.getElementById('bgCover');
+                coverArt.style.backgroundImage = 'url(' + urlCoverArt + ')';
+                coverArt.className = 'animated bounceInLeft';
+                coverBackground.style.backgroundImage = 'url(' + urlCoverArt + ')';
+
+                setTimeout(function () {
+                    coverArt.className = '';
+                }, 2000);
+
+                if ('mediaSession' in navigator) {
+                    navigator.mediaSession.metadata = new MediaMetadata({
+                        title: song,
+                        artist: artist,
+                        artwork: [
+                            { src: urlCoverArt, sizes: '96x96', type: 'image/png' },
+                            { src: urlCoverArt, sizes: '128x128', type: 'image/png' },
+                            { src: urlCoverArt, sizes: '192x192', type: 'image/png' },
+                            { src: urlCoverArt, sizes: '256x256', type: 'image/png' },
+                            { src: urlCoverArt, sizes: '384x384', type: 'image/png' },
+                            { src: urlCoverArt, sizes: '512x512', type: 'image/png' }
+                        ]
+                    });
+                }
+            }
+        }
+    };
+    var query = encodeURIComponent(artist + ' ' + song);
+    xhttp.open('GET', 'https://api.deezer.com/search?q=' + query, true);
+    xhttp.send();
+};
+
 
     this.changeVolumeIndicator = function (volume) {
         document.getElementById('volIndicator').innerHTML = volume;
