@@ -106,70 +106,7 @@ function Page() {
     }
 
     this.refreshCover = function (song = '', artist) {
-        // Default cover art
-        var urlCoverArt = 'img/cover.png';
-
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function () {
-            var coverArt = document.getElementById('currentCoverArt');
-            var coverBackground = document.getElementById('bgCover');
-
-            // Get cover art URL on iTunes API
-            if (this.readyState === 4 && this.status === 200) {
-                var data = JSON.parse(this.responseText);
-                var artworkUrl100 = data.results;
-                var urlCoverArt = artworkUrl100.artwork.medium;
-
-                coverArt.style.backgroundImage = 'url(' + urlCoverArt + ')';
-                coverArt.className = 'animated bounceInLeft';
-
-                coverBackground.style.backgroundImage = 'url(' + urlCoverArt + ')';
-
-                setTimeout(function () {
-                    coverArt.className = '';
-                }, 2000);
-
-                if ('mediaSession' in navigator) {
-                    navigator.mediaSession.metadata = new MediaMetadata({
-                        title: song,
-                        artist: artist,
-                        artwork: [{
-                                src: urlCoverArt,
-                                sizes: '96x96',
-                                type: 'image/png'
-                            },
-                            {
-                                src: urlCoverArt,
-                                sizes: '128x128',
-                                type: 'image/png'
-                            },
-                            {
-                                src: urlCoverArt,
-                                sizes: '192x192',
-                                type: 'image/png'
-                            },
-                            {
-                                src: urlCoverArt,
-                                sizes: '256x256',
-                                type: 'image/png'
-                            },
-                            {
-                                src: urlCoverArt,
-                                sizes: '384x384',
-                                type: 'image/png'
-                            },
-                            {
-                                src: urlCoverArt,
-                                sizes: '512x512',
-                                type: 'image/png'
-                            }
-                        ]
-                    });
-                }
-            }
-        }
-        xhttp.open('GET', 'https://prod-api.radioapi.me/1ceb9727-3e36-4e64-99e7-f776b50c7f4f/musicsearch?query=' + artist + ' ' + song);
-        xhttp.send();
+    fetchAlbumArtFromDeezer(`${artist} ${song}`);
     }
 
     this.changeVolumeIndicator = function (volume) {
@@ -618,3 +555,28 @@ loadRecentTracks();
 updateNowPlaying();
 setInterval(updateNowPlaying, 30000);
 
+
+function fetchAlbumArtFromDeezer(songName) {
+    const query = encodeURIComponent(songName);
+    const deezerUrl = `https://api.deezer.com/search?q=${query}`;
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(deezerUrl)}`;
+
+    fetch(proxyUrl)
+        .then(response => response.json())
+        .then(data => {
+            if (data.data && data.data.length > 0) {
+                const albumCover = data.data[0].album.cover_medium;
+
+                const coverArt = document.getElementById('currentCoverArt');
+                const coverBackground = document.getElementById('bgCover');
+
+                if (coverArt) coverArt.src = albumCover;
+                if (coverBackground) coverBackground.style.backgroundImage = `url('${albumCover}')`;
+            } else {
+                console.log("No album art found for:", songName);
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching album art from Deezer:", error);
+        });
+}
