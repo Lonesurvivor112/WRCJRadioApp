@@ -1,5 +1,3 @@
-
-// Radio Name on TAB
 const RADIO_NAME = 'WRCJ Radio';
 
 // SELECT ARTWORK PROVIDER, ITUNES, DEEZER & SPOTIFY  eg : spotify 
@@ -11,15 +9,12 @@ const URL_STREAMING = 'https://wrcj.streamguys1.com/live.aac';
 //NOW PLAYING API.
 const API_URL = 'https://wrcj.streamguys1.com/status-json.xsl';
 
-// Visit https://api.vagalume.com.br/docs/ to get your API key
-const API_KEY = "18fe07917957c289983464588aabddfb";
-
 window.onload = function () {
     var page = new Page;
     page.changeTitlePage();
     page.setVolume();
-    window.addEventListener("load", showDeezerCoverArt); //Loads the javascript cover art overlay, Does not replace cover.jpg
-    showDeezerCoverArt(); // Calls Function
+    window.addEventListener("load", showDeezerCoverArt);
+    showDeezerCoverArt();
 
     var player = new Player();
     player.play();
@@ -27,7 +22,7 @@ window.onload = function () {
     getStreamingData();
     // Interval to get streaming data in miliseconds
     setInterval(function () {
-        showDeezerCoverArt(); // Refresh Cover art
+        showDeezerCoverArt();
         getStreamingData();
     }, 10000);
 
@@ -54,9 +49,6 @@ function Page() {
             currentArtist.className = 'animated flipInY text-capitalize';
             currentArtist.innerHTML = artist;
 
-            // Refresh modal title
-             document.getElementById('lyricsSong').innerHTML = song + ' - ' + artist;
-
             // Remove animation classes
             setTimeout(function () {
                 currentSong.className = 'text-uppercase';
@@ -73,7 +65,7 @@ function Page() {
         // Default cover art
         var urlCoverArt = 'img/cover.png';
 
-        // Get cover art for song history - Updated to handle .xsl
+        // Get cover art for song history
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function () {
             if (this.readyState === 4 && this.status === 200) {
@@ -117,7 +109,7 @@ function Page() {
             var coverArt = document.getElementById('currentCoverArt');
             var coverBackground = document.getElementById('bgCover');
 
-            // Get cover art URL on iTunes API - NOT USED
+            // Get cover art URL on iTunes API
             if (this.readyState === 4 && this.status === 200) {
                 var data = JSON.parse(this.responseText);
                 var artworkUrl100 = data.results;
@@ -171,7 +163,7 @@ function Page() {
                 }
             }
         }
-        xhttp.open('GET', 'https://prod-api.radioapi.me/1ceb9727-3e36-4e64-99e7-f776b50c7f4f/musicsearch?query=' + artist + ' ' + song); // NOT USED
+        xhttp.open('GET', 'https://prod-api.radioapi.me/1ceb9727-3e36-4e64-99e7-f776b50c7f4f/musicsearch?query=' + artist + ' ' + song);
         xhttp.send();
     }
 
@@ -189,38 +181,6 @@ function Page() {
             document.getElementById('volume').value = volumeLocalStorage;
             document.getElementById('volIndicator').innerHTML = volumeLocalStorage;
         }
-    }
-    //Unused Funtion
-    this.refreshLyric = function (currentSong, currentArtist) {
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function () {
-            if (this.readyState === 4 && this.status === 200) {
-                var data = JSON.parse(this.responseText);
-
-                var openLyric = document.getElementsByClassName('lyrics')[0];
-
-                if (data.type === 'exact' || data.type === 'aprox') {
-                    var lyric = data.mus[0].text;
-
-                    document.getElementById('lyric').innerHTML = lyric.replace(/\n/g, '<br />');
-                    openLyric.style.opacity = "1";
-                    openLyric.setAttribute('data-toggle', 'modal');
-                } else {
-                    openLyric.style.opacity = "0.3";
-                    openLyric.removeAttribute('data-toggle');
-
-                    var modalLyric = document.getElementById('modalLyrics');
-                    modalLyric.style.display = "none";
-                    modalLyric.setAttribute('aria-hidden', 'true');
-                    (document.getElementsByClassName('modal-backdrop')[0]) ? document.getElementsByClassName('modal-backdrop')[0].remove(): '';
-                }
-            } else {
-                document.getElementsByClassName('lyrics')[0].style.opacity = "0.3";
-                document.getElementsByClassName('lyrics')[0].removeAttribute('data-toggle');
-            }
-        }
-        xhttp.open('GET', 'https://api.vagalume.com.br/search.php?apikey=' + API_KEY + '&art=' + currentArtist + '&mus=' + currentSong.toLowerCase(), true);
-        xhttp.send()
     }
 }
 
@@ -333,7 +293,7 @@ function mute() {
         audio.muted = false;
     }
 }
-// Changing this much breaks the entire app
+
 function getStreamingData() {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
@@ -343,7 +303,7 @@ function getStreamingData() {
             }
 
             var data = JSON.parse(this.responseText);
-            console.log('Received data:', data); // Add this line for debugging
+            console.log('Received data:', data);
 
             var page = new Page();
 
@@ -353,12 +313,10 @@ function getStreamingData() {
 
             // Change the title
             document.title = song + ' - ' + artist + ' | ' + RADIO_NAME;
-            
-                var currentSongElement = document.getElementById('currentSong');
-                if (currentSongElement && currentSongElement.innerHTML !== song) {
+
+            if (document.getElementById('currentSong').innerHTML !== song) {
                 page.refreshCover(song, artist);
-               page.refreshCurrentSong(song, artist);
-                //Unused: page.refreshLyric(song, artist);
+                page.refreshCurrentSong(song, artist);
 
                 for (var i = 0; i < 2; i++) {
                     page.refreshHistoric(data.history[i], i);
@@ -538,7 +496,7 @@ function intToDecimal(vol) {
 function decimalToInt(vol) {
     return vol * 100;
 }
-//Script to Record and save recent tracks - Image is not saved. 
+
 let recentTracks = [];
 
 function loadRecentTracks() {
@@ -555,7 +513,7 @@ function loadRecentTracks() {
 function saveRecentTracks() {
     localStorage.setItem("recentTracks", JSON.stringify(recentTracks));
 }
-//Main Function to update Title with yp_currently_playing from the .xsl
+
 function updateNowPlaying() {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
@@ -570,6 +528,9 @@ function updateNowPlaying() {
                 if (!currentlyPlaying) return;
 
                 document.getElementById("customNowPlaying").innerText = currentlyPlaying;
+
+                // Check if this might be classical music and get additional info
+                getClassicalInfo(currentlyPlaying);
 
                 if (recentTracks.length === 0 || recentTracks[0].track !== currentlyPlaying) {
                     recentTracks.unshift({
@@ -589,6 +550,7 @@ function updateNowPlaying() {
     xhttp.open("GET", "https://wrcj.streamguys1.com/status-json.xsl", true);
     xhttp.send();
 }
+
 function updateRecentTracksUI() {
     const list = document.getElementById("recentTracksList");
     list.innerHTML = "";
@@ -602,7 +564,7 @@ function updateRecentTracksUI() {
         list.appendChild(li);
     });
 }
-//Timestamp for recent tracks
+
 function getTimeAgo(timestamp) {
     const now = Date.now();
     const diff = now - timestamp;
@@ -617,7 +579,7 @@ function getTimeAgo(timestamp) {
     if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
     return `just now`;
 }
-// Function to overlay the Cover.png instead of replacing - When no image is found cover.png will be visiable. 
+
 function showDeezerCoverArt() {
     const streamUrl = "https://wrcj.streamguys1.com/status-json.xsl";
 
@@ -657,13 +619,10 @@ function showDeezerCoverArt() {
                         img.style.border = "none";
                         img.style.borderRadius = "8px";
                         img.style.boxShadow = "0 4px 12px rgba(0,0,0,0.3)";
-                        //img.style.opacity = "0";
-                        //img.style.transition = "opacity 0.5s ease-in-out";
                         img.style.zIndex = 9999;
-                        img.style.pointerEvents = "none"; // so it doesn't block clicks
+                        img.style.pointerEvents = "none";
 
                         document.body.appendChild(img);
-                        //requestAnimationFrame(() => { img.style.opacity = '1'; });
                     } else {
                         console.log("No album art found for:", currentlyPlaying);
                     }
@@ -682,3 +641,231 @@ loadRecentTracks();
 updateNowPlaying();
 setInterval(updateNowPlaying, 30000);
 
+// Classical Music Information Functions - Completely NEW!
+function getClassicalInfo(trackName) {
+    // Show the classical info box
+    document.getElementById('classicalInfo').style.display = 'block';
+    
+    // Reset fields
+    document.getElementById('composer').textContent = 'Searching...';
+    document.getElementById('era').textContent = 'Searching...';
+    document.getElementById('compositionYear').textContent = 'Searching...';
+    document.getElementById('description').textContent = 'Loading classical information...';
+    
+    // Try to parse classical music format (WRCJ uses: Composer - Title)
+    const classicalPattern = /^(.+?)\s*-\s*(.+)$/;
+    const match = trackName.match(classicalPattern);
+    
+    if (match) {
+        const composerName = match[1].trim();
+        const workTitle = match[2].trim();
+        
+        // Try multiple data sources
+        tryMusicBrainz(composerName, workTitle)
+            .then(result => {
+                if (result) {
+                    updateClassicalDisplay(result);
+                } else {
+                    return tryWikidata(composerName, workTitle);
+                }
+            })
+            .then(result => {
+                if (result) {
+                    updateClassicalDisplay(result);
+                } else {
+                    return tryOpenOpus(composerName, workTitle);
+                }
+            })
+            .then(result => {
+                if (result) {
+                    updateClassicalDisplay(result);
+                } else {
+                    showFallbackInfo(composerName, workTitle);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching classical info:', error);
+                showFallbackInfo(composerName, workTitle);
+            });
+    } else {
+        // Try to detect if it might still be classical
+        if (isLikelyClassical(trackName)) {
+            tryGeneralClassicalSearch(trackName);
+        } else {
+            // Hide classical info for non-classical tracks
+            document.getElementById('classicalInfo').style.display = 'none';
+        }
+    }
+}
+
+function tryMusicBrainz(composer, work) {
+    const query = encodeURIComponent(`${composer} ${work}`);
+    const url = `https://musicbrainz.org/ws/2/work?query=${query}&fmt=json&limit=1`;
+    
+    return fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.works && data.works.length > 0) {
+                const work = data.works[0];
+                return {
+                    composer: composer,
+                    era: guessEraFromComposer(composer),
+                    year: extractYear(work),
+                    description: `${work.title} - A classical composition by ${composer}.`
+                };
+            }
+            return null;
+        })
+        .catch(() => null);
+}
+
+function tryWikidata(composer, work) {
+    // This is a simplified approach - in practice, Wikidata queries are more complex
+    return new Promise((resolve) => {
+        // Fallback to era guessing
+        const era = guessEraFromComposer(composer);
+        if (era !== 'Unknown') {
+            resolve({
+                composer: composer,
+                era: era,
+                year: guessYearFromEra(era),
+                description: `A ${era.toLowerCase()} composition by ${composer}.`
+            });
+        } else {
+            resolve(null);
+        }
+    });
+}
+
+function tryOpenOpus(composer, work) {
+    // OpenOpus API for classical music (if available)
+    return fetch(`https://api.openopus.org/work/list/composer/${encodeURIComponent(composer)}.json`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.works && data.works.length > 0) {
+                const matchingWork = data.works.find(w => 
+                    w.title.toLowerCase().includes(work.toLowerCase().substring(0, 20))
+                );
+                if (matchingWork) {
+                    return {
+                        composer: composer,
+                        era: data.composer?.epoch || guessEraFromComposer(composer),
+                        year: matchingWork.year || 'Unknown',
+                        description: `${matchingWork.title} by ${composer}.`
+                    };
+                }
+            }
+            return null;
+        })
+        .catch(() => null);
+}
+
+function isLikelyClassical(trackName) {
+    const classicalKeywords = [
+        'symphony', 'concerto', 'sonata', 'quartet', 'quintet', 'opus', 'op.', 'op6',
+        'movement', 'allegro', 'andante', 'adagio', 'presto', 'largo', 'vivace',
+        'bach', 'mozart', 'beethoven', 'chopin', 'brahms', 'tchaikovsky', 
+        'vivaldi', 'handel', 'haydn', 'schubert', 'liszt', 'debussy', 'ravel',
+        'concerto grosso', 'brandenburg', 'partita', 'prelude', 'fugue', 'suite',
+        'no.', 'bwv', 'k.', 'hob', 'woo'
+    ];
+    
+    const trackLower = trackName.toLowerCase();
+    return classicalKeywords.some(keyword => trackLower.includes(keyword));
+}
+
+function guessEraFromComposer(composer) {
+    const composerLower = composer.toLowerCase();
+    
+    // Baroque (1600-1750)
+    if (composerLower.includes('bach') || composerLower.includes('vivaldi') || 
+        composerLower.includes('handel') || composerLower.includes('scarlatti')) {
+        return 'Baroque';
+    }
+    
+    // Classical (1750-1820)
+    if (composerLower.includes('mozart') || composerLower.includes('haydn') || 
+        composerLower.includes('early beethoven')) {
+        return 'Classical';
+    }
+    
+    // Romantic (1820-1900)
+    if (composerLower.includes('beethoven') || composerLower.includes('chopin') || 
+        composerLower.includes('brahms') || composerLower.includes('tchaikovsky') ||
+        composerLower.includes('liszt') || composerLower.includes('schumann')) {
+        return 'Romantic';
+    }
+    
+    // Impressionist (1890-1930)
+    if (composerLower.includes('debussy') || composerLower.includes('ravel')) {
+        return 'Impressionist';
+    }
+    
+    // Modern (1900+)
+    if (composerLower.includes('stravinsky') || composerLower.includes('bartok') ||
+        composerLower.includes('schoenberg')) {
+        return 'Modern';
+    }
+    
+    return 'Unknown';
+}
+
+function guessYearFromEra(era) {
+    const eras = {
+        'Baroque': '1600-1750',
+        'Classical': '1750-1820', 
+        'Romantic': '1820-1900',
+        'Impressionist': '1890-1930',
+        'Modern': '1900-present'
+    };
+    return eras[era] || 'Unknown';
+}
+
+function extractYear(work) {
+    // Try to extract year from work data
+    if (work.disambiguation) {
+        const yearMatch = work.disambiguation.match(/(\d{4})/);
+        if (yearMatch) return yearMatch[1];
+    }
+    return 'Unknown';
+}
+
+function tryGeneralClassicalSearch(trackName) {
+    // For tracks that seem classical but don't match composer:title format
+    document.getElementById('composer').textContent = 'Detecting...';
+    document.getElementById('era').textContent = 'Unknown';
+    document.getElementById('compositionYear').textContent = 'Unknown';
+    document.getElementById('description').textContent = 'This appears to be a classical piece. More specific information may be available when the format includes the composer name.';
+}
+
+function showFallbackInfo(composer, work) {
+    const era = guessEraFromComposer(composer);
+    const yearRange = guessYearFromEra(era);
+    
+    // Create more detailed descriptions based on the work type
+    let description = `${work} by ${composer}.`;
+    
+    if (work.toLowerCase().includes('concerto grosso')) {
+        description += ` A concerto grosso is a form of baroque concerto featuring a small group of soloists (concertino) against a full orchestra (ripieno). `;
+    } else if (work.toLowerCase().includes('concerto')) {
+        description += ` A concerto featuring solo instrument(s) accompanied by orchestra. `;
+    } else if (work.toLowerCase().includes('symphony')) {
+        description += ` A large-scale orchestral composition typically in multiple movements. `;
+    } else if (work.toLowerCase().includes('sonata')) {
+        description += ` A musical composition typically for a solo instrument or instrument with piano accompaniment. `;
+    }
+    
+    description += `This ${era.toLowerCase()} composition showcases the musical style and characteristics typical of the ${era} period (${yearRange}).`;
+    
+    document.getElementById('composer').textContent = composer;
+    document.getElementById('era').textContent = era;
+    document.getElementById('compositionYear').textContent = yearRange;
+    document.getElementById('description').textContent = description;
+}
+
+function updateClassicalDisplay(info) {
+    document.getElementById('composer').textContent = info.composer;
+    document.getElementById('era').textContent = info.era;
+    document.getElementById('compositionYear').textContent = info.year;
+    document.getElementById('description').textContent = info.description;
+}
