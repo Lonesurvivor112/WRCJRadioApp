@@ -351,19 +351,19 @@ function getStreamingData() {
             let artist = data.artist ? data.artist.replace(/&apos;/g, '\'') : '';
 
             // Change the title - Not Used
-            //document.title = song + ' - ' + artist + ' | ' + RADIO_NAME;
+            document.title = song + ' - ' + artist + ' | ' + RADIO_NAME;
 
-           // if (document.getElementById('currentSong').innerHTML !== song) {
-           //     page.refreshCover(song, artist);
-           //     page.refreshCurrentSong(song, artist);
-           //     page.refreshLyric(song, artist);
+            if (document.getElementById('currentSong').innerHTML !== song) {
+                page.refreshCover(song, artist);
+               page.refreshCurrentSong(song, artist);
+                page.refreshLyric(song, artist);
 
-            //    for (var i = 0; i < 2; i++) {
-           //         page.refreshHistoric(data.history[i], i);
-          //      }
-        //    }
-    //    }
- //   };
+                for (var i = 0; i < 2; i++) {
+                    page.refreshHistoric(data.history[i], i);
+                }
+            }
+        }
+    };
 
     var d = new Date();
 
