@@ -109,16 +109,21 @@ function Page() {
         // Default cover art
         var urlCoverArt = 'img/cover.png';
 
+        //var xhttp = new XMLHttpRequest();
+        //xhttp.onreadystatechange = function () {
+        //    var coverArt = document.getElementById('currentCoverArt');
+        //    var coverBackground = document.getElementById('bgCover');
+
             // Get cover art URL on iTunes API
             if (this.readyState === 4 && this.status === 200) {
                 var data = JSON.parse(this.responseText);
                 var artworkUrl100 = data.results;
                 var urlCoverArt = artworkUrl100.artwork.medium;
 
-                coverArt.style.backgroundImage = 'url(' + urlCoverArt + ')';
-                coverArt.className = 'animated bounceInLeft';
+                //coverArt.style.backgroundImage = 'url(' + urlCoverArt + ')';
+                //coverArt.className = 'animated bounceInLeft';
 
-                coverBackground.style.backgroundImage = 'url(' + urlCoverArt + ')';
+                //coverBackground.style.backgroundImage = 'url(' + urlCoverArt + ')';
 
                 setTimeout(function () {
                     coverArt.className = '';
@@ -163,8 +168,8 @@ function Page() {
                 }
             }
         }
-        xhttp.open('GET', 'https://prod-api.radioapi.me/1ceb9727-3e36-4e64-99e7-f776b50c7f4f/musicsearch?query=' + artist + ' ' + song);
-        xhttp.send();
+        //xhttp.open('GET', 'https://prod-api.radioapi.me/1ceb9727-3e36-4e64-99e7-f776b50c7f4f/musicsearch?query=' + artist + ' ' + song);
+        //xhttp.send();
     }
 
     this.changeVolumeIndicator = function (volume) {
@@ -346,7 +351,8 @@ function getStreamingData() {
             document.title = song + ' - ' + artist + ' | ' + RADIO_NAME;
 
             if (document.getElementById('currentSong').innerHTML !== song) {
-                page.refreshCover(song, artist);
+                //page.refreshCover(song, artist);
+                fetchAlbumArtFromDeezer(`${artist} ${song}`);
                 page.refreshCurrentSong(song, artist);
                 page.refreshLyric(song, artist);
 
@@ -560,8 +566,6 @@ function updateNowPlaying() {
                 if (!currentlyPlaying) return;
 
                 document.getElementById("customNowPlaying").innerText = currentlyPlaying;
-                fetchAlbumArtFromDeezer(currentlyPlaying);
-
 
                 if (recentTracks.length === 0 || recentTracks[0].track !== currentlyPlaying) {
                     recentTracks.unshift({
@@ -595,31 +599,9 @@ function updateRecentTracksUI() {
     });
 }
 
-function getTimeAgo(timestamp) {
-    const now = Date.now();
-    const diff = now - timestamp;
-
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
-    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-    return `just now`;
-}
-
-// Load from localStorage on page load
-loadRecentTracks();
-updateNowPlaying();
-setInterval(updateNowPlaying, 30000);
-
 function fetchAlbumArtFromDeezer(songName) {
     const query = encodeURIComponent(songName);
     const deezerUrl = `https://api.deezer.com/search?q=${query}`;
-
-    // Use a CORS proxy since Deezer doesn't support CORS directly
     const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(deezerUrl)}`;
 
     fetch(proxyUrl)
@@ -642,4 +624,23 @@ function fetchAlbumArtFromDeezer(songName) {
         });
 }
 
+function getTimeAgo(timestamp) {
+    const now = Date.now();
+    const diff = now - timestamp;
+
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    return `just now`;
+}
+
+// Load from localStorage on page load
+loadRecentTracks();
+updateNowPlaying();
+setInterval(updateNowPlaying, 30000);
 
