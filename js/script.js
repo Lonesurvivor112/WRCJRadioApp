@@ -858,17 +858,29 @@ function showFallbackInfo(composer, work) {
     // Create more detailed descriptions based on the work type
     let description = `${work} by ${composer}.`;
     
-    if (work.toLowerCase().includes('concerto grosso')) {
-        description += ` A concerto grosso is a form of baroque concerto featuring a small group of soloists (concertino) against a full orchestra (ripieno). `;
-    } else if (work.toLowerCase().includes('concerto')) {
-        description += ` A concerto featuring solo instrument(s) accompanied by orchestra. `;
-    } else if (work.toLowerCase().includes('symphony')) {
-        description += ` A large-scale orchestral composition typically in multiple movements. `;
-    } else if (work.toLowerCase().includes('sonata')) {
-        description += ` A musical composition typically for a solo instrument or instrument with piano accompaniment. `;
+    // Check if we have meaningful era information
+    if (era === 'Unknown' || yearRange === 'Unknown') {
+        description += ` There are unknown details about this piece.`;
+    } else {
+        // Add work-specific information only if we have era info
+        if (work.toLowerCase().includes('concerto grosso')) {
+            description += ` A concerto grosso is a form of baroque concerto featuring a small group of soloists (concertino) against a full orchestra (ripieno). `;
+        } else if (work.toLowerCase().includes('concerto')) {
+            description += ` A concerto featuring solo instrument(s) accompanied by orchestra. `;
+        } else if (work.toLowerCase().includes('symphony')) {
+            description += ` A large-scale orchestral composition typically in multiple movements. `;
+        } else if (work.toLowerCase().includes('sonata')) {
+            description += ` A musical composition typically for a solo instrument or instrument with piano accompaniment. `;
+        } else if (work.toLowerCase().includes('reflexion') || work.toLowerCase().includes('reflection')) {
+            description += ` A contemplative musical piece, often featuring introspective and meditative qualities. `;
+        } else if (work.toLowerCase().includes('prelude')) {
+            description += ` An introductory piece of music, often serving as an opening to a larger work. `;
+        } else if (work.toLowerCase().includes('etude')) {
+            description += ` A study or exercise piece designed to develop particular technical skills. `;
+        }
+        
+        description += `This ${era.toLowerCase()} composition showcases the musical style and characteristics typical of the ${era} period (${yearRange}).`;
     }
-    
-    description += `This ${era.toLowerCase()} composition showcases the musical style and characteristics typical of the ${era} period (${yearRange}).`;
     
     document.getElementById('composer').textContent = composer;
     document.getElementById('era').textContent = era;
