@@ -55,7 +55,7 @@ function Page() {
             currentArtist.innerHTML = artist;
 
             // Refresh modal title
-            document.getElementById('lyricsSong').innerHTML = song + ' - ' + artist;
+            // document.getElementById('lyricsSong').innerHTML = song + ' - ' + artist;
 
             // Remove animation classes
             setTimeout(function () {
@@ -190,8 +190,8 @@ function Page() {
             document.getElementById('volIndicator').innerHTML = volumeLocalStorage;
         }
     }
-
-    this.refreshLyric = function (currentSong, currentArtist) {
+    //Unused Funtion
+    //this.refreshLyric = function (currentSong, currentArtist) {
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function () {
             if (this.readyState === 4 && this.status === 200) {
@@ -358,7 +358,7 @@ function getStreamingData() {
                 if (currentSongElement && currentSongElement.innerHTML !== song) {
                 page.refreshCover(song, artist);
                page.refreshCurrentSong(song, artist);
-                page.refreshLyric(song, artist);
+                //Unused: page.refreshLyric(song, artist);
 
                 for (var i = 0; i < 2; i++) {
                     page.refreshHistoric(data.history[i], i);
