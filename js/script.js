@@ -660,21 +660,7 @@ function getClassicalInfo(trackName) {
     document.getElementById('composer').textContent = 'Searching...';
     document.getElementById('era').textContent = 'Searching...';
     document.getElementById('compositionYear').textContent = 'Searching...';
-    document.getElementById('description').textContent = 'Loading classical information...';
-    //Load Music Metadata    
-getClassicalMetadata(trackName)
-    .then(result => {
-      if (result) {
-        updateClassicalDisplay(result);
-      } else {
-        document.getElementById('classicalInfo').style.display = 'none';
-      }
-    })
-    .catch(error => {
-      console.error('Metadata fetch error:', error);
-      document.getElementById('classicalInfo').style.display = 'none';
-    });
-}
+    document.getElementById('description').textContent = 'Loading classical information...';    
     // Try to parse classical music format (WRCJ uses: Composer - Title)
     const classicalPattern = /^(.+?)\s*-\s*(.+)$/;
     const match = trackName.match(classicalPattern);
