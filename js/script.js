@@ -24,7 +24,7 @@ window.onload = function () {
     setInterval(function () {
         showDeezerCoverArt();
         getStreamingData();
-    }, 10000);
+    }, 30000);
 
     var coverArt = document.getElementsByClassName('cover-album')[0];
 
