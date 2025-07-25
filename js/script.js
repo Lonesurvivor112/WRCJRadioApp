@@ -642,15 +642,6 @@ updateNowPlaying();
 setInterval(updateNowPlaying, 30000);
 
 // Get classical music Metadata
-function getClassicalMetadata(trackName) {
-  const { composer, title } = parseTrackName(trackName);
-
-  return tryOpenOpus(composer, title)
-    .then(result => result || tryMusicBrainz(composer, title))
-    .then(result => result || tryWikidata(composer, title))
-    .then(result => result || fallbackMetadata(composer, title));
-}
-
 // Classical Music Information Functions
 // Composer name mapping for common composers
 const composerNameMap = {
@@ -701,20 +692,30 @@ const composerNameMap = {
     'part': 'Arvo Pärt',
     'pärt': 'Arvo Pärt',
     'hawes': 'Patrick Hawes',
-    'casella': 'Alfredo Casella' // Added Casella
+    'casella': 'Alfredo Casella'
 };
 
 // Cache for resolved composer names (keyed by partialName + workTitle)
-const composerNameCache = JSON.parse(localStorage.getItem('composerNameCache')) || {};
+const composerNameCache = JSON.parse(localStorage.getItem('composerNameCache')) || 
+{};
+
+// Era year ranges for fallback
+const eraYearRanges = {
+    'Baroque': '1600–1750',
+    'Classical': '1750–1820',
+    'Romantic': '1815–1910',
+    'Impressionist': '1890–1920',
+    'Contemporary': '1900–present'
+};
 
 // Resolve composer name dynamically using song title for context
 async function resolveComposer(partialName, workTitle) {
     const normalizedPartialName = partialName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const cacheKey = `${normalizedPartialName}:${workTitle.toLowerCase()}`;
+    const cacheKey = `partialName}:${normalizedPartialName}:${workTitle.toLowerCase()}`;
 
     // Check mapping first
     if (composerNameMap[normalizedPartialName]) {
-        return composerNameMap[normalizedPartialName];
+        return composerNameMap[normalizedPartialName.toLowerCase()];
     }
 
     // Check cache
@@ -729,26 +730,24 @@ async function resolveComposer(partialName, workTitle) {
         const response = await fetch(url);
         const data = await response.json();
         if (data.artists && data.artists.length > 0) {
-            // Find artist with classical tag or highest score
             let composer = data.artists.find(artist => 
                 artist.tags && artist.tags.some(tag => tag.name.toLowerCase().includes('classical'))
             );
             if (!composer) {
-                // Check if work title matches any artist's works
-                for (const artist of data.artists) {
-                    const workUrl = `https://musicbrainz.org/ws/2/work?query=${encodeURIComponent(workTitle)}%20artist:${encodeURIComponent(artist.name)}&fmt=json&limit=1`;
+                for (const artist of artists.data.artists) {
+                    const workUrl = `https://musicbrainz.org/ws/2/work?query=${encodeURIComponent(workTitle)}%20artist:${encodeURIComponent(artist.name)}`&fmt=json&limit=1`;
                     const workResponse = await fetch(workUrl);
-                    const workData = await workResponse.json();
-                    if (workData.works && workData.works.length > 0) {
+                    const workData = data await response.json();
+                    if (workResponse && workData.data.works && workData.data.works.length > 0) {
                         composer = artist;
                         break;
                     }
                 }
             }
-            composer = composer || data.artists[0]; // Fallback to highest-scored artist
-            const fullName = composer.name;
+            composer = composer || data.artists[0];
+            const fullName = composer.name.toLowerCase();
             console.log(`Resolved ${partialName} to ${fullName} via MusicBrainz for work "${workTitle}"`);
-            composerNameCache[cacheKey] = fullName;
+            composerNameCache[cacheKey.toLowerCase()] = fullName;
             localStorage.setItem('composerNameCache', JSON.stringify(composerNameCache));
             return fullName;
         }
@@ -763,14 +762,13 @@ async function resolveComposer(partialName, workTitle) {
         const response = await fetch(url);
         const data = await response.json();
         if (data.query.search && data.query.search.length > 0) {
-            // Find the most relevant result that looks like a composer
             const composerPage = data.query.search.find(page => 
                 page.snippet.toLowerCase().includes('composer') && !page.title.includes('(disambiguation)')
             );
             if (composerPage) {
-                const fullName = composerPage.title;
+                const fullName = composerPage.title.toLowerCase();
                 console.log(`Resolved ${partialName} to ${fullName} via Wikipedia for work "${workTitle}"`);
-                composerNameCache[cacheKey] = fullName;
+                composerNameCache[cacheKey.toLowerCase()] = fullName;
                 localStorage.setItem('composerNameCache', JSON.stringify(composerNameCache));
                 return fullName;
             }
@@ -801,7 +799,6 @@ async function getClassicalInfo(trackName) {
     if (match) {
         const partialComposerName = match[1].trim();
         const workTitle = match[2].trim();
-        // Resolve full composer name using song title for context
         const composerName = await resolveComposer(partialComposerName, workTitle);
         
         try {
@@ -812,7 +809,7 @@ async function getClassicalInfo(trackName) {
                 return;
             }
 
-            // Try Wikipedia
+            // Try Wikipedia with web search for year
             result = await tryWikipedia(composerName, workTitle);
             if (result) {
                 updateClassicalDisplay(result);
@@ -843,6 +840,43 @@ async function getClassicalInfo(trackName) {
     }
 }
 
+async function searchWebForYear(composer, work) {
+    let query = encodeURIComponent(`${composer} ${work} composition year`);
+    let url = `https://en.wikipedia.org/w/api.php?action=query&format=json&list=search&srsearch=${query}&srlimit=5&origin=*`;
+    
+    try {
+        let response = await fetch(url);
+        let data = await response.json();
+        if (data.query.search && data.query.search.length > 0) {
+            // Try the first relevant page
+            let page = data.query.search.find(p => 
+                p.title.toLowerCase().includes(composer.toLowerCase()) || 
+                p.title.toLowerCase().includes(work.toLowerCase()) ||
+                p.snippet.toLowerCase().includes('composed')
+            );
+            if (page) {
+                // Fetch the page extract
+                let pageUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(page.title)}&origin=*`;
+                let pageResponse = await fetch(pageUrl);
+                let pageData = await pageResponse.json();
+                let pageContent = Object.values(pageData.query.pages)[0];
+                if (pageContent.extract) {
+                    // Look for years or ranges like "1680s"
+                    let yearMatch = pageContent.extract.match(/\b(composed|written|published)\b.*?\b(\d{4}s|\d{4})\b/i);
+                    if (yearMatch) {
+                        console.log(`Year found on Wikipedia page "${page.title}": ${yearMatch[2]}`);
+                        return yearMatch[2];
+                    }
+                }
+            }
+        }
+        return null;
+    } catch (error) {
+        console.error(`Web search error for year (${composer} ${work}):`, error);
+        return null;
+    }
+}
+
 async function tryMusicBrainz(composer, work) {
     const query = encodeURIComponent(`${composer} ${work}`);
     const url = `https://musicbrainz.org/ws/2/work?query=${query}&fmt=json&limit=1`;
@@ -853,7 +887,7 @@ async function tryMusicBrainz(composer, work) {
         if (data.works && data.works.length > 0) {
             const workData = data.works[0];
             const era = guessEraFromComposer(composer);
-            const year = extractYear(workData) || (await extractYearFromWikipedia(composer, work)) || guessYearFromEra(era);
+            const year = await searchWebForYear(composer, work) || eraYearRanges[era] || 'Unknown';
             const description = await getWikipediaDescription(composer, workData.title) || `${workData.title} by ${composer}. A ${era.toLowerCase()} composition.`;
             return {
                 composer: composer,
@@ -870,7 +904,7 @@ async function tryMusicBrainz(composer, work) {
 }
 
 async function tryWikipedia(composer, work) {
-    let query = encodeURIComponent(`${composer} ${work}`);
+    let query = encodeURIComponent(`${composer} ${work.split(':')[0]}`); // Remove movement details
     let url = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts|info&exintro&explaintext&redirects&titles=${query}&origin=*`;
     
     try {
@@ -878,30 +912,12 @@ async function tryWikipedia(composer, work) {
         let data = await response.json();
         let pages = data.query.pages;
         let page = Object.values(pages)[0];
-        if (page && page.extract && !page.title.includes('(disambiguation)') && page.title.toLowerCase().includes(composer.toLowerCase())) {
+        if (page && page.extract && !page.title.includes('(disambiguation)') && 
+            (page.title.toLowerCase().includes(composer.toLowerCase()) || page.title.toLowerCase().includes(work.toLowerCase()))) {
             const era = guessEraFromComposer(composer);
-            const year = await extractYearFromWikipedia(composer, work) || guessYearFromEra(era);
-            const description = page.extract.substring(0, 400).replace(/\n/g, ' ').replace(/\[.*?\]/g, '').replace(/\(.*?\)/g, '') + '...';
+            const year = await searchWebForYear(composer, work) || eraYearRanges[era] || 'Unknown';
+            const description = `${work} by ${composer}. ${page.extract.substring(0, 400).replace(/\n/g, ' ').replace(/\[.*?\]/g, '').replace(/\(.*?\)/g, '')}...`;
             console.log(`Wikipedia page used: ${page.title}`);
-            return {
-                composer: composer,
-                era: era,
-                year: year,
-                description: description
-            };
-        }
-        // Try a more specific query for symphonies
-        query = encodeURIComponent(`${composer} Symphony No. 3`);
-        url = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts|info&exintro&explaintext&redirects&titles=${query}&origin=*`;
-        response = await fetch(url);
-        data = await response.json();
-        pages = data.query.pages;
-        page = Object.values(pages)[0];
-        if (page && page.extract && !page.title.includes('(disambiguation)') && page.title.toLowerCase().includes(composer.toLowerCase())) {
-            const era = guessEraFromComposer(composer);
-            const year = await extractYearFromWikipedia(composer, work) || guessYearFromEra(era);
-            const description = page.extract.substring(0, 400).replace(/\n/g, ' ').replace(/\[.*?\]/g, '').replace(/\(.*?\)/g, '') + '...';
-            console.log(`Wikipedia page used (specific query): ${page.title}`);
             return {
                 composer: composer,
                 era: era,
@@ -926,7 +942,7 @@ async function tryOpenOpus(composer, work) {
             );
             if (matchingWork) {
                 const era = data.composer?.epoch || guessEraFromComposer(composer);
-                const year = matchingWork.year || (await extractYearFromWikipedia(composer, work)) || guessYearFromEra(era);
+                const year = await searchWebForYear(composer, work) || eraYearRanges[era] || 'Unknown';
                 const description = await getWikipediaDescription(composer, matchingWork.title) || `${matchingWork.title} by ${composer}. A ${era.toLowerCase()} composition.`;
                 return {
                     composer: composer,
@@ -944,8 +960,8 @@ async function tryOpenOpus(composer, work) {
 }
 
 async function getWikipediaDescription(composer, work) {
-    // First try the specific work
-    let query = encodeURIComponent(`${composer} ${work}`);
+    // Try specific work page
+    let query = encodeURIComponent(`${composer} ${work.split(':')[0]}`);
     let url = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&redirects&titles=${query}&origin=*`;
     
     try {
@@ -953,21 +969,10 @@ async function getWikipediaDescription(composer, work) {
         let data = await response.json();
         let pages = data.query.pages;
         let page = Object.values(pages)[0];
-        if (page && page.extract && !page.title.includes('(disambiguation)') && page.title.toLowerCase().includes(composer.toLowerCase())) {
+        if (page && page.extract && !page.title.includes('(disambiguation)') && 
+            (page.title.toLowerCase().includes(composer.toLowerCase()) || page.title.toLowerCase().includes(work.toLowerCase()))) {
             console.log(`Wikipedia work page used: ${page.title}`);
-            return page.extract.substring(0, 400).replace(/\n/g, ' ').replace(/\[.*?\]/g, '').replace(/\(.*?\)/g, '') + '...';
-        }
-
-        // Try a more specific query for symphonies
-        query = encodeURIComponent(`${composer} Symphony No. 3`);
-        url = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&redirects&titles=${query}&origin=*`;
-        response = await fetch(url);
-        data = await response.json();
-        pages = data.query.pages;
-        page = Object.values(pages)[0];
-        if (page && page.extract && !page.title.includes('(disambiguation)') && page.title.toLowerCase().includes(composer.toLowerCase())) {
-            console.log(`Wikipedia symphony page used: ${page.title}`);
-            return page.extract.substring(0, 400).replace(/\n/g, ' ').replace(/\[.*?\]/g, '').replace(/\(.*?\)/g, '') + '...';
+            return `${work} by ${composer}. ${page.extract.substring(0, 400).replace(/\n/g, ' ').replace(/\[.*?\]/g, '').replace(/\(.*?\)/g, '')}...`;
         }
 
         // Fallback to composer page
@@ -988,39 +993,6 @@ async function getWikipediaDescription(composer, work) {
     }
 }
 
-async function extractYearFromWikipedia(composer, work) {
-    let query = encodeURIComponent(`${composer} ${work}`);
-    let url = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&redirects&titles=${query}&origin=*`;
-    
-    try {
-        let response = await fetch(url);
-        let data = await response.json();
-        let pages = data.query.pages;
-        let page = Object.values(pages)[0];
-        if (page && page.extract) {
-            const yearMatch = page.extract.match(/\b(\d{4})\b/);
-            if (yearMatch) return yearMatch[1];
-        }
-        // Try specific query for Casella Symphony No. 3
-        if (composer.toLowerCase().includes('casella') && work.toLowerCase().includes('symphony no. 3')) {
-            query = encodeURIComponent('Alfredo Casella Symphony No. 3');
-            url = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&redirects&titles=${query}&origin=*`;
-            response = await fetch(url);
-            data = await response.json();
-            pages = data.query.pages;
-            page = Object.values(pages)[0];
-            if (page && page.extract) {
-                const yearMatch = page.extract.match(/\b(1939|1940)\b/); // Known composition years
-                if (yearMatch) return yearMatch[1];
-            }
-            return '1939'; // Hardcode fallback for known year
-        }
-        return null;
-    } catch (error) {
-        return null;
-    }
-}
-
 function isLikelyClassical(trackName) {
     const classicalKeywords = [
         'symphony', 'concerto', 'sonata', 'quartet', 'quintet', 'opus', 'op.', 'op6',
@@ -1028,7 +1000,7 @@ function isLikelyClassical(trackName) {
         'bach', 'mozart', 'beethoven', 'chopin', 'brahms', 'tchaikovsky', 
         'vivaldi', 'handel', 'haydn', 'schubert', 'liszt', 'debussy', 'ravel',
         'concerto grosso', 'brandenburg', 'partita', 'prelude', 'fugue', 'suite',
-        'no.', 'bwv', 'k.', 'hob', 'woo'
+        'no.', 'bwv', 'k.', 'hob', 'woo', 'slavonic dance'
     ];
     
     const trackLower = trackName.toLowerCase();
@@ -1066,61 +1038,27 @@ function guessEraFromComposer(composer) {
         return 'Impressionist';
     }
     
-    if (composerLower.includes('gershwin') || composerLower.includes('or') ||
-        composerLower.includes('stravinsky') || composerLower.includes('bartok') ||
+    if (composerLower.includes('stravinsky') || composerLower.includes('bartok') ||
         composerLower.includes('schoenberg') || composerLower.includes('berg') ||
         composerLower.includes('webern') || composerLower.includes('copland') ||
         composerLower.includes('ives') || composerLower.includes('cage') ||
         composerLower.includes('glass') || composerLower.includes('reich') ||
         composerLower.includes('adams') || composerLower.includes('part') ||
         composerLower.includes('hawes') || composerLower.includes('pärt') ||
-        composerLower.includes('casella')) { // Added Casella
+        composerLower.includes('casella')) {
         return 'Contemporary';
     }
     
     return 'Unknown';
 }
 
-function guessYearFromEra(era) {
-    const eras = {
-        'Baroque': '1650',
-        'Classical': '1785',
-        'Romantic': '1860',
-        'Impressionist': '1910',
-        'Contemporary': '1950', // Default for 20th-century composers
-        'Modern': '1950'
-    };
-    return eras[era] || 'Unknown';
-}
-
-function extractYear(work) {
-    if (work.disambiguation) {
-        const yearMatch = work.disambiguation.match(/(\d{4})/);
-        if (yearMatch) return yearMatch[1];
-    }
-    if (work.attributes) {
-        const dateAttr = work.attributes.find(attr => attr.type === 'year');
-        if (dateAttr && dateAttr.value.match(/(\d{4})/)) {
-            return dateAttr.value.match(/(\d{4})/)[1];
-        }
-    }
-    return null;
-}
-
-function tryGeneralClassicalSearch(trackName) {
-    document.getElementById('composer').textContent = 'Unknown';
-    document.getElementById('era').textContent = 'Unknown';
-    document.getElementById('compositionYear').textContent = 'Unknown';
-    document.getElementById('description').textContent = 'This appears to be a classical piece. Specific details are unavailable without composer information.';
-}
-
 function showFallbackInfo(composer, work) {
     const era = guessEraFromComposer(composer);
-    const year = guessYearFromEra(era);
+    const year = eraYearRanges[era] || 'Unknown';
     
     let description = `${work} by ${composer}. `;
     
-    if (era === 'Unknown' || year === 'Unknown') {
+    if (era === 'Unknown') {
         description += `Limited information available.`;
     } else {
         if (work.toLowerCase().includes('concerto grosso')) {
@@ -1137,9 +1075,11 @@ function showFallbackInfo(composer, work) {
             description += `An introductory piece, often leading to a larger work. `;
         } else if (work.toLowerCase().includes('etude')) {
             description += `A study piece designed to develop technical skills. `;
+        } else if (work.toLowerCase().includes('slavonic dance')) {
+            description += `A dance-inspired orchestral piece, often reflecting Slavic or Bohemian folk styles. `;
         }
         
-        description += `This ${era.toLowerCase()} composition reflects the style of the ${era} period (circa ${year}).`;
+        description += `This ${era.toLowerCase()} composition reflects the style of the ${era} period (${year}).`;
     }
     
     document.getElementById('composer').textContent = composer;
