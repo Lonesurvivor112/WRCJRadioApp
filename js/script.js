@@ -18,6 +18,8 @@ window.onload = function () {
     var page = new Page;
     page.changeTitlePage();
     page.setVolume();
+    window.addEventListener("load", showDeezerCoverArt);
+
 
     var player = new Player();
     player.play();
