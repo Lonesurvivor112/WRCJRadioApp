@@ -735,7 +735,7 @@ async function resolveComposer(partialName, workTitle) {
             );
             if (!composer) {
                 for (const artist of artists.data.artists) {
-                    const workUrl = `https://musicbrainz.org/ws/2/work?query=${encodeURIComponent(workTitle)}%20artist:${encodeURIComponent(artist.name)}`&fmt=json&limit=1`;
+                    const workUrl = `https://musicbrainz.org/ws/2/work?query=${encodeURIComponent(workTitle)}%20artist:${encodeURIComponent(artist.name)}&fmt=json&limit=1`;
                     const workResponse = await fetch(workUrl);
                     const workData = data await response.json();
                     if (workResponse && workData.data.works && workData.data.works.length > 0) {
