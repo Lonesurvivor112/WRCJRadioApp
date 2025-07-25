@@ -350,10 +350,11 @@ function getStreamingData() {
             let song = data.song ? data.song.replace(/&apos;/g, '\'') : '';
             let artist = data.artist ? data.artist.replace(/&apos;/g, '\'') : '';
 
-            // Change the title - Not Used
+            // Change the title
             document.title = song + ' - ' + artist + ' | ' + RADIO_NAME;
-
-            if (document.getElementById('currentSong').innerHTML !== song) {
+            
+                var currentSongElement = document.getElementById('currentSong');
+                if (currentSongElement && currentSongElement.innerHTML !== song) {
                 page.refreshCover(song, artist);
                page.refreshCurrentSong(song, artist);
                 page.refreshLyric(song, artist);
