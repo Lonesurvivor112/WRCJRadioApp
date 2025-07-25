@@ -18,7 +18,6 @@ window.onload = function () {
     var page = new Page;
     page.changeTitlePage();
     page.setVolume();
-   
 
     var player = new Player();
     player.play();
@@ -32,7 +31,6 @@ window.onload = function () {
     var coverArt = document.getElementsByClassName('cover-album')[0];
 
     coverArt.style.height = coverArt.offsetWidth + 'px';
-    window.addEventListener("load", updateCoverArtFromDeezerYP);
 }
 
 // DOM control
@@ -615,103 +613,8 @@ function getTimeAgo(timestamp) {
     return `just now`;
 }
 
-// Simple standalone function to fetch current song and display Deezer album art
-function showDeezerCoverArt() {
-    const streamUrl = "https://wrcj.streamguys1.com/status-json.xsl";
-
-    fetch(streamUrl)
-        .then(response => response.json())
-        .then(data => {
-            let source = data.icestats.source;
-            let currentlyPlaying = Array.isArray(source)
-                ? source[0].yp_currently_playing
-                : source.yp_currently_playing;
-
-            if (!currentlyPlaying) return;
-
-            const query = encodeURIComponent(currentlyPlaying);
-            const deezerUrl = `https://api.deezer.com/search?q=${query}`;
-            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(deezerUrl)}`;
-
-            fetch(proxyUrl)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.data && data.data.length > 0) {
-                        const albumCover = data.data[0].album.cover_medium;
-
-                        const img = document.createElement("img");
-                        img.src = albumCover;
-                        img.style.position = "absolute";
-                        img.style.top = Math.floor(Math.random() * 80 + 10) + "vh";
-                        img.style.left = Math.floor(Math.random() * 80 + 10) + "vw";
-                        img.style.width = "150px";
-                        img.style.height = "150px";
-                        img.style.border = "3px solid red";
-                        img.style.zIndex = 9999;
-
-                        document.body.appendChild(img);
-                    } else {
-                        console.log("No album art found for:", currentlyPlaying);
-                    }
-                })
-                .catch(error => {
-                    console.error("Error fetching album art from Deezer:", error);
-                });
-        })
-        .catch(error => {
-            console.error("Error fetching stream metadata:", error);
-        });
-}
-
-// Call the function once to test
-showDeezerCoverArt();
-
-
-function updateCoverArtFromDeezerYP() {
-    const streamUrl = "https://wrcj.streamguys1.com/status-json.xsl";
-
-    fetch(streamUrl)
-        .then(response => response.json())
-        .then(data => {
-            let source = data.icestats.source;
-            let currentlyPlaying = Array.isArray(source)
-                ? source[0].yp_currently_playing
-                : source.yp_currently_playing;
-
-            if (!currentlyPlaying) return;
-
-            const query = encodeURIComponent(currentlyPlaying);
-            const deezerUrl = `https://api.deezer.com/search?q=${query}`;
-            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(deezerUrl)}`;
-
-            fetch(proxyUrl)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.data && data.data.length > 0) {
-                        const albumCover = data.data[0].album.cover_xl;
-                        const coverArt = document.getElementById('currentCoverArt');
-                        if (coverArt) {
-                            coverArt.style.backgroundImage = `url('${albumCover}')`;
-                            coverArt.style.backgroundSize = 'cover';
-                            coverArt.style.backgroundPosition = 'center';
-                            coverArt.style.backgroundRepeat = 'no-repeat';
-                        }
-                    } else {
-                        console.log("No album art found for:", currentlyPlaying);
-                    }
-                })
-                .catch(error => {
-                    console.error("Error fetching album art from Deezer:", error);
-                });
-        })
-        .catch(error => {
-            console.error("Error fetching stream metadata:", error);
-        });
-}
-
 // Load from localStorage on page load
 loadRecentTracks();
 updateNowPlaying();
 setInterval(updateNowPlaying, 30000);
-
 
