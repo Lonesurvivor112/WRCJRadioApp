@@ -622,43 +622,42 @@ function fetchAlbumArtFromDeezer(songName) {
         });
 
 function updateCoverArtFromYP() {
-    const xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function () {
-        if (this.readyState === 4 && this.status === 200) {
-            try {
-                const data = JSON.parse(this.responseText);
-                let source = data.icestats.source;
-                let currentlyPlaying = Array.isArray(source) ? source[0].yp_currently_playing : source.yp_currently_playing;
+    const streamUrl = "https://wrcj.streamguys1.com/status-json.xsl";
 
-                if (!currentlyPlaying) return;
+    fetch(streamUrl)
+        .then(response => response.json())
+        .then(data => {
+            let source = data.icestats.source;
+            let currentlyPlaying = Array.isArray(source)
+                ? source[0].yp_currently_playing
+                : source.yp_currently_playing;
 
-                const query = encodeURIComponent(currentlyPlaying);
-                const deezerUrl = `https://api.deezer.com/search?q=${query}`;
-                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(deezerUrl)}`;
+            if (!currentlyPlaying) return;
 
-                fetch(proxyUrl)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.data && data.data.length > 0) {
-                            const albumCover = data.data[0].album.cover_medium;
-                            const coverArt = document.getElementById('currentCoverArt');
-                            if (coverArt) {
-                                coverArt.style.backgroundImage = `url('${albumCover}')`;
-                            }
-                        } else {
-                            console.log("No album art found for:", currentlyPlaying);
+            const query = encodeURIComponent(currentlyPlaying);
+            const deezerUrl = `https://api.deezer.com/search?q=${query}`;
+            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(deezerUrl)}`;
+
+            fetch(proxyUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.data && data.data.length > 0) {
+                        const albumCover = data.data[0].album.cover_xl;
+                        const coverArt = document.getElementById('currentCoverArt');
+                        if (coverArt) {
+                            coverArt.style.backgroundImage = `url('${albumCover}')`;
+                            coverArt.style.backgroundSize = 'cover';
+                            coverArt.style.backgroundPosition = 'center';
                         }
-                    })
-                    .catch(error => {
-                        console.error("Error fetching album art from Deezer:", error);
-                    });
-            } catch (e) {
-                console.error("Error parsing JSON:", e);
-            }
-        }
-    };
-    xhttp.open("GET", "https://wrcj.streamguys1.com/status-json.xsl", true);
-    xhttp.send();
-}
-
+                    } else {
+                        console.log("No album art found for:", currentlyPlaying);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching album art from Deezer:", error);
+                });
+        })
+        .catch(error => {
+            console.error("Error fetching stream metadata:", error);
+        });
 }
