@@ -1,5 +1,5 @@
 
-
+// Radio Name on TAB
 const RADIO_NAME = 'WRCJ Radio';
 
 // SELECT ARTWORK PROVIDER, ITUNES, DEEZER & SPOTIFY  eg : spotify 
@@ -18,8 +18,8 @@ window.onload = function () {
     var page = new Page;
     page.changeTitlePage();
     page.setVolume();
-    window.addEventListener("load", showDeezerCoverArt);
-    showDeezerCoverArt();
+    window.addEventListener("load", showDeezerCoverArt); //Loads the javascript cover art overlay, Does not replace cover.jpg
+    showDeezerCoverArt(); // Calls Function
 
     var player = new Player();
     player.play();
@@ -27,7 +27,7 @@ window.onload = function () {
     getStreamingData();
     // Interval to get streaming data in miliseconds
     setInterval(function () {
-        showDeezerCoverArt();
+        showDeezerCoverArt(); // Refresh Cover art
         getStreamingData();
     }, 10000);
 
@@ -73,7 +73,7 @@ function Page() {
         // Default cover art
         var urlCoverArt = 'img/cover.png';
 
-        // Get cover art for song history
+        // Get cover art for song history - Updated to handle .xsl
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function () {
             if (this.readyState === 4 && this.status === 200) {
@@ -117,7 +117,7 @@ function Page() {
             var coverArt = document.getElementById('currentCoverArt');
             var coverBackground = document.getElementById('bgCover');
 
-            // Get cover art URL on iTunes API
+            // Get cover art URL on iTunes API - NOT USED
             if (this.readyState === 4 && this.status === 200) {
                 var data = JSON.parse(this.responseText);
                 var artworkUrl100 = data.results;
@@ -171,7 +171,7 @@ function Page() {
                 }
             }
         }
-        xhttp.open('GET', 'https://prod-api.radioapi.me/1ceb9727-3e36-4e64-99e7-f776b50c7f4f/musicsearch?query=' + artist + ' ' + song);
+        xhttp.open('GET', 'https://prod-api.radioapi.me/1ceb9727-3e36-4e64-99e7-f776b50c7f4f/musicsearch?query=' + artist + ' ' + song); // NOT USED
         xhttp.send();
     }
 
@@ -333,6 +333,7 @@ function mute() {
         audio.muted = false;
     }
 }
+// Changing this much breaks the entire app
 function getStreamingData() {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
@@ -537,7 +538,7 @@ function intToDecimal(vol) {
 function decimalToInt(vol) {
     return vol * 100;
 }
-
+//Script to Record and save recent tracks - Image is not saved. 
 let recentTracks = [];
 
 function loadRecentTracks() {
@@ -554,7 +555,7 @@ function loadRecentTracks() {
 function saveRecentTracks() {
     localStorage.setItem("recentTracks", JSON.stringify(recentTracks));
 }
-
+//Main Function to update Title with yp_currently_playing from the .xsl
 function updateNowPlaying() {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
@@ -601,7 +602,7 @@ function updateRecentTracksUI() {
         list.appendChild(li);
     });
 }
-
+//Timestamp for recent tracks
 function getTimeAgo(timestamp) {
     const now = Date.now();
     const diff = now - timestamp;
@@ -616,7 +617,7 @@ function getTimeAgo(timestamp) {
     if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
     return `just now`;
 }
-
+// Function to overlay the Cover.png instead of replacing - When no image is found cover.png will be visiable. 
 function showDeezerCoverArt() {
     const streamUrl = "https://wrcj.streamguys1.com/status-json.xsl";
 
