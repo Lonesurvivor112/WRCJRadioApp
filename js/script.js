@@ -18,16 +18,14 @@ window.onload = function () {
     var page = new Page;
     page.changeTitlePage();
     page.setVolume();
+
     var player = new Player();
     player.play();
+
     getStreamingData();
-	
-	// Fetch album Art from deezer using yp_currently_playing
-	updateCoverArtFromYP();
     // Interval to get streaming data in miliseconds
     setInterval(function () {
         getStreamingData();
-		updateCoverArtFromYP(); // Refresh every 10 seconds 
     }, 10000);
 
     var coverArt = document.getElementsByClassName('cover-album')[0];
@@ -108,19 +106,23 @@ function Page() {
     }
 
     this.refreshCover = function (song = '', artist) {
-    var urlCoverArt = 'img/cover.png'; // default fallback
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function () {
-        if (this.readyState === 4 && this.status === 200) {
-            var data = JSON.parse(this.responseText);
-            if (data.data && data.data.length > 0) {
-                var track = data.data[0];
-                urlCoverArt = track.album.cover_medium; // or cover_big / cover_xl
+        // Default cover art
+        var urlCoverArt = 'img/cover.png';
 
-                var coverArt = document.getElementById('currentCoverArt');
-                var coverBackground = document.getElementById('bgCover');
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            var coverArt = document.getElementById('currentCoverArt');
+            var coverBackground = document.getElementById('bgCover');
+
+            // Get cover art URL on iTunes API
+            if (this.readyState === 4 && this.status === 200) {
+                var data = JSON.parse(this.responseText);
+                var artworkUrl100 = data.results;
+                var urlCoverArt = artworkUrl100.artwork.medium;
+
                 coverArt.style.backgroundImage = 'url(' + urlCoverArt + ')';
                 coverArt.className = 'animated bounceInLeft';
+
                 coverBackground.style.backgroundImage = 'url(' + urlCoverArt + ')';
 
                 setTimeout(function () {
@@ -131,24 +133,44 @@ function Page() {
                     navigator.mediaSession.metadata = new MediaMetadata({
                         title: song,
                         artist: artist,
-                        artwork: [
-                            { src: urlCoverArt, sizes: '96x96', type: 'image/png' },
-                            { src: urlCoverArt, sizes: '128x128', type: 'image/png' },
-                            { src: urlCoverArt, sizes: '192x192', type: 'image/png' },
-                            { src: urlCoverArt, sizes: '256x256', type: 'image/png' },
-                            { src: urlCoverArt, sizes: '384x384', type: 'image/png' },
-                            { src: urlCoverArt, sizes: '512x512', type: 'image/png' }
+                        artwork: [{
+                                src: urlCoverArt,
+                                sizes: '96x96',
+                                type: 'image/png'
+                            },
+                            {
+                                src: urlCoverArt,
+                                sizes: '128x128',
+                                type: 'image/png'
+                            },
+                            {
+                                src: urlCoverArt,
+                                sizes: '192x192',
+                                type: 'image/png'
+                            },
+                            {
+                                src: urlCoverArt,
+                                sizes: '256x256',
+                                type: 'image/png'
+                            },
+                            {
+                                src: urlCoverArt,
+                                sizes: '384x384',
+                                type: 'image/png'
+                            },
+                            {
+                                src: urlCoverArt,
+                                sizes: '512x512',
+                                type: 'image/png'
+                            }
                         ]
                     });
                 }
             }
         }
-    };
-    var query = encodeURIComponent(artist + ' ' + song);
-    xhttp.open('GET', 'https://api.deezer.com/search?q=' + query, true);
-    xhttp.send();
-};
-
+        xhttp.open('GET', 'https://prod-api.radioapi.me/1ceb9727-3e36-4e64-99e7-f776b50c7f4f/musicsearch?query=' + artist + ' ' + song);
+        xhttp.send();
+    }
 
     this.changeVolumeIndicator = function (volume) {
         document.getElementById('volIndicator').innerHTML = volume;
@@ -591,37 +613,8 @@ function getTimeAgo(timestamp) {
     return `just now`;
 }
 
-// Load from localStorage on page load
-loadRecentTracks();
-updateNowPlaying();
-setInterval(updateNowPlaying, 30000);
-
-
-function fetchAlbumArtFromDeezer(songName) {
-    const query = encodeURIComponent(songName);
-    const deezerUrl = `https://api.deezer.com/search?q=${query}`;
-    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(deezerUrl)}`;
-
-    fetch(proxyUrl)
-        .then(response => response.json())
-        .then(data => {
-            if (data.data && data.data.length > 0) {
-                const albumCover = data.data[0].album.cover_medium;
-
-                const coverArt = document.getElementById('currentCoverArt');
-                const coverBackground = document.getElementById('bgCover');
-
-                if (coverArt) coverArt.src = albumCover;
-                if (coverBackground) coverBackground.style.backgroundImage = `url('${albumCover}')`;
-            } else {
-                console.log("No album art found for:", songName);
-            }
-        })
-        .catch(error => {
-            console.error("Error fetching album art from Deezer:", error);
-        });
-
-function updateCoverArtFromYP() {
+// Simple standalone function to fetch current song and display Deezer album art
+function showDeezerCoverArt() {
     const streamUrl = "https://wrcj.streamguys1.com/status-json.xsl";
 
     fetch(streamUrl)
@@ -642,13 +635,19 @@ function updateCoverArtFromYP() {
                 .then(response => response.json())
                 .then(data => {
                     if (data.data && data.data.length > 0) {
-                        const albumCover = data.data[0].album.cover_xl;
-                        const coverArt = document.getElementById('currentCoverArt');
-                        if (coverArt) {
-                            coverArt.style.backgroundImage = `url('${albumCover}')`;
-                            coverArt.style.backgroundSize = 'cover';
-                            coverArt.style.backgroundPosition = 'center';
-                        }
+                        const albumCover = data.data[0].album.cover_medium;
+
+                        const img = document.createElement("img");
+                        img.src = albumCover;
+                        img.style.position = "absolute";
+                        img.style.top = Math.floor(Math.random() * 80 + 10) + "vh";
+                        img.style.left = Math.floor(Math.random() * 80 + 10) + "vw";
+                        img.style.width = "150px";
+                        img.style.height = "150px";
+                        img.style.border = "3px solid red";
+                        img.style.zIndex = 9999;
+
+                        document.body.appendChild(img);
                     } else {
                         console.log("No album art found for:", currentlyPlaying);
                     }
@@ -661,3 +660,13 @@ function updateCoverArtFromYP() {
             console.error("Error fetching stream metadata:", error);
         });
 }
+
+// Call the function once to test
+showDeezerCoverArt();
+
+// Load from localStorage on page load
+loadRecentTracks();
+updateNowPlaying();
+setInterval(updateNowPlaying, 30000);
+
+
