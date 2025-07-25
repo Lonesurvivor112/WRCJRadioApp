@@ -641,6 +641,16 @@ loadRecentTracks();
 updateNowPlaying();
 setInterval(updateNowPlaying, 30000);
 
+// Get classical music Metadata
+function getClassicalMetadata(trackName) {
+  const { composer, title } = parseTrackName(trackName);
+
+  return tryOpenOpus(composer, title)
+    .then(result => result || tryMusicBrainz(composer, title))
+    .then(result => result || tryWikidata(composer, title))
+    .then(result => result || fallbackMetadata(composer, title));
+}
+
 // Classical Music Information Functions
 function getClassicalInfo(trackName) {
     // Show the classical info box
@@ -809,7 +819,8 @@ function guessEraFromComposer(composer) {
     }
     
     // Modern/Contemporary (1900+)
-    if (composerLower.includes('stravinsky') || composerLower.includes('bartok') ||
+    if (composerLower.includes('gershwin')||
+        composerLower.includes('stravinsky') || composerLower.includes('bartok') ||
         composerLower.includes('schoenberg') || composerLower.includes('berg') ||
         composerLower.includes('webern') || composerLower.includes('copland') ||
         composerLower.includes('ives') || composerLower.includes('cage') ||
