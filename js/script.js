@@ -13,21 +13,21 @@ window.onload = function () {
     var page = new Page;
     page.changeTitlePage();
     page.setVolume();
-    window.addEventListener("load", showDeezerCoverArt);
-    showDeezerCoverArt();
-
+    
     var player = new Player();
     player.play();
 
-    getStreamingData();
-    // Interval to get streaming data in miliseconds
+    // Initial updates
+    updateNowPlaying();
+    showDeezerCoverArt();
+
+    // Single interval for all updates
     setInterval(function () {
+        updateNowPlaying();
         showDeezerCoverArt();
-        getStreamingData();
     }, 30000);
 
     var coverArt = document.getElementsByClassName('cover-album')[0];
-
     coverArt.style.height = coverArt.offsetWidth + 'px';
 }
 
@@ -71,7 +71,7 @@ function Page() {
             if (this.readyState === 4 && this.status === 200) {
                 var data = JSON.parse(this.responseText);
                 var artwork = data.results.artwork;
-                 var artworkXL = artwork.large;
+                var artworkXL = artwork.large;
 
                 document.querySelectorAll('#historicSong article .cover-historic')[n].style.backgroundImage = 'url(' + artworkXL + ')';
             }
@@ -109,7 +109,7 @@ function Page() {
             var coverArt = document.getElementById('currentCoverArt');
             var coverBackground = document.getElementById('bgCover');
 
-            // Get cover art URL on iTunes API
+            // Get cover art URL
             if (this.readyState === 4 && this.status === 200) {
                 var data = JSON.parse(this.responseText);
                 var artworkUrl100 = data.results;
@@ -514,6 +514,8 @@ function saveRecentTracks() {
     localStorage.setItem("recentTracks", JSON.stringify(recentTracks));
 }
 
+let lastTrackName = null;
+
 function updateNowPlaying() {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
@@ -526,6 +528,12 @@ function updateNowPlaying() {
                     : source.yp_currently_playing;
 
                 if (!currentlyPlaying) return;
+
+                // Skip if track hasn't changed
+                if (currentlyPlaying === lastTrackName) {
+                    return;
+                }
+                lastTrackName = currentlyPlaying;
 
                 document.getElementById("customNowPlaying").innerText = currentlyPlaying;
 
@@ -638,8 +646,6 @@ function showDeezerCoverArt() {
 
 // Load from localStorage on page load
 loadRecentTracks();
-updateNowPlaying();
-setInterval(updateNowPlaying, 30000);
 
 // Get classical music Metadata
 // Classical Music Information Functions
@@ -700,7 +706,7 @@ const composerNameMap = {
 const composerNameCache = JSON.parse(localStorage.getItem('composerNameCache')) || {};
 
 // Cache for last track name to prevent unnecessary refreshes
-let lastTrackName = null;
+// let lastTrackName = null; // Moved to updateNowPlaying scope
 
 // Era year ranges for fallback
 const eraYearRanges = {
@@ -788,12 +794,7 @@ async function resolveComposer(partialName, workTitle) {
 }
 
 async function getClassicalInfo(trackName) {
-    // Skip if track hasn't changed
-    if (trackName === lastTrackName) {
-        return;
-    }
-    lastTrackName = trackName;
-
+    // Skip if track hasn't changed (handled in updateNowPlaying)
     // Show the classical info box
     document.getElementById('classicalInfo').style.display = 'block';
     
@@ -877,7 +878,7 @@ async function searchWebForYear(composer, work) {
                 let pageContent = Object.values(pageData.query.pages)[0];
                 if (pageContent && pageContent.extract) {
                     // Look for years or ranges like "1680s" or "1870"
-                    let yearMatch = pageContent.extract.match(/\b(composed|written|published)\b.*?\b(\d{4}s?)\b/i);
+                    let yearMatch = pageContent.extract.match(/\b(composed|written|published|premiered)\b.*?\b(\d{4}s?)\b/i);
                     if (yearMatch) {
                         console.log(`Year found on Wikipedia page "${page.title}": ${yearMatch[2]}`);
                         return yearMatch[2];
@@ -1117,7 +1118,7 @@ function showFallbackInfo(composer, work) {
     document.getElementById('composer').textContent = composer;
     document.getElementById('era').textContent = era;
     document.getElementById('compositionYear').textContent = year;
-    document.getElementById('description').innerHTML = description + ' <a href="https://en.wikipedia.org/wiki/' + encodeURIComponent(composer) + '" target="_blank" class="learn-more">Learn More</a>';
+    document.getElementById('description').innerHTML = description + ` <a href="https://en.wikipedia.org/wiki/${encodeURIComponent(composer)}" target="_blank" class="learn-more">Learn More</a>`;
 }
 
 function updateClassicalDisplay(info) {
@@ -1129,4 +1130,10 @@ function updateClassicalDisplay(info) {
         descriptionHtml += ` <a href="${encodeURI(info.sourceUrl)}" target="_blank" class="learn-more">Learn More</a>`;
     }
     document.getElementById('description').innerHTML = descriptionHtml;
+}
+
+function tryGeneralClassicalSearch(trackName) {
+    // Placeholder for handling non-standard track names
+    console.warn(`Non-standard track name format: ${trackName}. Falling back to general search.`);
+    showFallbackInfo('Unknown Composer', trackName);
 }
