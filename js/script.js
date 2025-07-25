@@ -655,13 +655,13 @@ function showDeezerCoverArt() {
                         img.style.border = "none";
                         img.style.borderRadius = "8px";
                         img.style.boxShadow = "0 4px 12px rgba(0,0,0,0.3)";
-                        img.style.opacity = "0";
-                        img.style.transition = "opacity 0.5s ease-in-out";
+                        //img.style.opacity = "0";
+                        //img.style.transition = "opacity 0.5s ease-in-out";
                         img.style.zIndex = 9999;
                         img.style.pointerEvents = "none"; // so it doesn't block clicks
 
                         document.body.appendChild(img);
-                        requestAnimationFrame(() => { img.style.opacity = '1'; });
+                        //requestAnimationFrame(() => { img.style.opacity = '1'; });
                     } else {
                         console.log("No album art found for:", currentlyPlaying);
                     }
