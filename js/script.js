@@ -636,23 +636,23 @@ function showDeezerCoverArt() {
                     if (data.data && data.data.length > 0) {
                         const albumCover = data.data[0].album.cover_medium;
 
-                        const coverArt = document.getElementById('currentCoverArt');
-                        if (coverArt) {
-                            // Clear any existing children
-                            coverArt.innerHTML = '';
+                        const target = document.getElementById("currentCoverArt");
+                        if (!target) return;
 
-                            // Create and style the image
-                            const img = document.createElement("img");
-                            img.src = albumCover;
-                            img.style.width = "100%";
-                            img.style.height = "100%";
-                            img.style.objectFit = "cover";
-                            img.style.borderRadius = "8px"; // optional
-                            img.style.display = "block";
+                        const rect = target.getBoundingClientRect();
 
-                            // Append to the coverArt container
-                            coverArt.appendChild(img);
-                        }
+                        const img = document.createElement("img");
+                        img.src = albumCover;
+                        img.style.position = "absolute";
+                        img.style.top = `${rect.top + window.scrollY}px`;
+                        img.style.left = `${rect.left + window.scrollX}px`;
+                        img.style.width = `${rect.width}px`;
+                        img.style.height = `${rect.height}px`;
+                        img.style.border = "3px solid red";
+                        img.style.zIndex = 9999;
+                        img.style.pointerEvents = "none"; // so it doesn't block clicks
+
+                        document.body.appendChild(img);
                     } else {
                         console.log("No album art found for:", currentlyPlaying);
                     }
