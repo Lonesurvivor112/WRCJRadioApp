@@ -109,11 +109,6 @@ function Page() {
         // Default cover art
         var urlCoverArt = 'img/cover.png';
 
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function () {
-            var coverArt = document.getElementById('currentCoverArt');
-            var coverBackground = document.getElementById('bgCover');
-
             // Get cover art URL on iTunes API
             if (this.readyState === 4 && this.status === 200) {
                 var data = JSON.parse(this.responseText);
