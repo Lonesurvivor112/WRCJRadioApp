@@ -594,7 +594,6 @@ loadRecentTracks();
 updateNowPlaying();
 setInterval(updateNowPlaying, 30000);
 
-
 function fetchAlbumArtFromDeezer(songName) {
     const query = encodeURIComponent(songName);
     const deezerUrl = `https://api.deezer.com/search?q=${query}`;
@@ -605,11 +604,10 @@ function fetchAlbumArtFromDeezer(songName) {
         .then(data => {
             if (data.data && data.data.length > 0) {
                 const albumCover = data.data[0].album.cover_medium;
-
                 const coverArt = document.getElementById('currentCoverArt');
                 const coverBackground = document.getElementById('bgCover');
 
-                if (coverArt) coverArt.src = albumCover;
+                if (coverArt) coverArt.style.backgroundImage = `url('${albumCover}')`;
                 if (coverBackground) coverBackground.style.backgroundImage = `url('${albumCover}')`;
             } else {
                 console.log("No album art found for:", songName);
@@ -619,3 +617,4 @@ function fetchAlbumArtFromDeezer(songName) {
             console.error("Error fetching album art from Deezer:", error);
         });
 }
+
