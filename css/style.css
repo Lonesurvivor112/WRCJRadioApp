@@ -397,4 +397,11 @@ input[type=range]::-ms-thumb {
     box-shadow: 1px 5px #30303022;
     transform: scale(1.1);
 }
-
+.learn-more {
+    color: #1a73e8;
+    text-decoration: none;
+    font-weight: bold;
+}
+.learn-more:hover {
+    text-decoration: underline;
+}
