@@ -18,13 +18,10 @@
 
     <title>RadioPlayer</title>
 
-
     <link rel="icon" type="image/png" href="img/cover.png" />
     <link rel="stylesheet" href="css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="css/animate.css">
     <link rel="stylesheet" href="css/style.css?v2322">
-
-    
 </head>
 
 <body>
@@ -52,31 +49,25 @@
                                         <div id="customNowPlaying" style="font-size: 1.2em; font-weight: bold; margin-top: 20px;">
                                         Loading current track...
                                         </div>
-                                       
+                                        
+                                        <!-- Classical Music Information Box -->
+                                        <div id="classicalInfo" style="background-color: rgba(0, 0, 0, 0.6); color: white; padding: 15px; border-radius: 10px; margin-top: 15px; display: none;">
+                                            <h4 style="margin: 0 0 10px 0; color: #ffd700;">Classical Details</h4>
+                                            <div id="composerEra" style="margin-bottom: 8px;">
+                                                <strong>Composer:</strong> <span id="composer">--</span><br>
+                                                <strong>Era:</strong> <span id="era">--</span><br>
+                                                <strong>Year:</strong> <span id="compositionYear">--</span>
+                                            </div>
+                                            <div id="programNotes" style="font-size: 0.9em; line-height: 1.4; color: #e0e0e0;">
+                                                <strong>About this piece:</strong><br>
+                                                <span id="description">Loading classical information...</span>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="col-12">
-                                        <!--
-                                       <div class="row">
-                                            <div class="play-pause col-12 col-md-2 text-center">
-                                                <i id="playerButton" class="fa fa-play-circle" onclick="togglePlay()"></i>
-                                            </div>
-                                            <div class="col-12 col-md-10 text-center">
-                                                <div class="row volume-control">
-                                                    <div class="volume-icon col-1"><i class="fa fa-volume-up"></i></div>
-                                                    <div class="volume-slide col-10 text-center"><input type="range" id="volume"
-                                                            step="1" min="0" max="100" value="80"></div>
-                                                    <div class="percentual-volume col-12">Volume <span id="volIndicator">...</span>%</div>
-                                                </div>
-                                            </div>
-                                            <div class="col-12 text-center call-lyrics">
-                                                <a href="#" class="lyrics" style="" data-target="#modalLyrics">VER LETRA</a>
-                                            </div>
-                                        </div>-->
-                                        
                                         <div class="row">
                                             <div class="play-pause col-12 col-md-6 text-center">
-                                                <button  class="btn-play" onclick="togglePlay()"><i id="playerButton" class="fa fa-play"></i> <span id="buttonPlay">PLAY</span></button>
-                
+                                                <button class="btn-play" onclick="togglePlay()"><i id="playerButton" class="fa fa-play"></i> <span id="buttonPlay">PLAY</span></button>
                                             </div>
                                         </div>
                                         <div class="row">
@@ -91,7 +82,7 @@
                                         </div>
                                         <div class="row">
                                             <div class="col-12 col-md-6 text-center call-tracklist">
-                                            <a href="https://onlineradiobox.com/us/wrcj/playlist/?cs=us.wrcj" target="_blank" class="tracklist">WRCJ TRACKLIST</a>
+                                                <a href="https://example.com" target="_blank" class="tracklist">WRCJ TRACKLIST</a>
                                             </div>
                                         </div>
                                     </div>
@@ -112,26 +103,10 @@
             </div>
         </section>
     </main>
-    <div class="modal fade" id="modalLyrics" tabindex="-1" role="dialog" aria-labelledby="lyricsSong" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="lyricsSong">Lyrics</h5>
-                    <button type="button" style="color: #fff" class="close" data-dismiss="modal" aria-label="Fechar">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                
-                <div class="modal-body" id="lyric"></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-success" data-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
+
     <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"></script>
     <script type="text/javascript" src="js/bootstrap.min.js"></script>
-<script type="text/javascript" src="js/script.js"></script>
-</body>
+    <script type="text/javascript" src="js/script.js"></script>
+	</body>
 </html>
