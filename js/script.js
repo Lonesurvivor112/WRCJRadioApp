@@ -710,22 +710,24 @@ async function tryMusicBrainz(composer, work) {
         if (data.works && data.works.length > 0) {
             const workData = data.works[0];
             const era = guessEraFromComposer(composer);
+            const year = extractYear(workData) || (await extractYearFromWikipedia(composer, work)) || guessYearFromEra(era);
             return {
                 composer: composer,
                 era: era,
-                year: extractYear(workData) || guessYearFromEra(era),
-                description: `${workData.title} by ${composer}. ${await getWikipediaDescription(composer, workData.title)}`
+                year: year,
+                description: await getWikipediaDescription(composer, workData.title) || `${workData.title} by ${composer}. A ${era.toLowerCase()} composition.`
             };
         }
         return null;
-    } catch {
+    } catch (error) {
+        console.error('MusicBrainz error:', error);
         return null;
     }
 }
 
 async function tryWikipedia(composer, work) {
     const query = encodeURIComponent(`${composer} ${work}`);
-    const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&titles=${query}&origin=*`;
+    const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts|info&exintro&explaintext&titles=${query}&origin=*`;
     
     try {
         const response = await fetch(url);
@@ -734,15 +736,17 @@ async function tryWikipedia(composer, work) {
         const page = Object.values(pages)[0];
         if (page && page.extract) {
             const era = guessEraFromComposer(composer);
+            const year = await extractYearFromWikipedia(composer, work) || guessYearFromEra(era);
             return {
                 composer: composer,
                 era: era,
-                year: guessYearFromEra(era),
-                description: `${work} by ${composer}. ${page.extract.substring(0, 200)}...`
+                year: year,
+                description: `${work} by ${composer}. ${page.extract.substring(0, 300).replace(/\n/g, ' ')}...`
             };
         }
         return null;
-    } catch {
+    } catch (error) {
+        console.error('Wikipedia error:', error);
         return null;
     }
 }
@@ -756,16 +760,19 @@ async function tryOpenOpus(composer, work) {
                 w.title.toLowerCase().includes(work.toLowerCase().substring(0, 20))
             );
             if (matchingWork) {
+                const era = data.composer?.epoch || guessEraFromComposer(composer);
+                const year = matchingWork.year || (await extractYearFromWikipedia(composer, work)) || guessYearFromEra(era);
                 return {
                     composer: composer,
-                    era: data.composer?.epoch || guessEraFromComposer(composer),
-                    year: matchingWork.year || guessYearFromEra(guessEraFromComposer(composer)),
-                    description: `${matchingWork.title} by ${composer}. ${await getWikipediaDescription(composer, matchingWork.title)}`
+                    era: era,
+                    year: year,
+                    description: await getWikipediaDescription(composer, matchingWork.title) || `${matchingWork.title} by ${composer}. A ${era.toLowerCase()} composition.`
                 };
             }
         }
         return null;
-    } catch {
+    } catch (error) {
+        console.error('OpenOpus error:', error);
         return null;
     }
 }
@@ -780,7 +787,7 @@ async function getWikipediaDescription(composer, work) {
         const pages = data.query.pages;
         const page = Object.values(pages)[0];
         if (page && page.extract) {
-            return page.extract.substring(0, 200) + '...';
+            return page.extract.substring(0, 300).replace(/\n/g, ' ') + '...';
         }
         // Fallback to composer info
         const composerQuery = encodeURIComponent(composer);
@@ -789,11 +796,31 @@ async function getWikipediaDescription(composer, work) {
         const composerData = await composerResponse.json();
         const composerPage = Object.values(composerData.query.pages)[0];
         if (composerPage && composerPage.extract) {
-            return `No specific information found for ${work}. About the composer: ${composerPage.extract.substring(0, 200)}...`;
+            return `${work} by ${composer}. About the composer: ${composerPage.extract.substring(0, 300).replace(/\n/g, ' ')}...`;
         }
-        return `A classical composition by ${composer}.`;
+        return null;
+    } catch (error) {
+        console.error('Wikipedia description error:', error);
+        return null;
+    }
+}
+
+async function extractYearFromWikipedia(composer, work) {
+    const query = encodeURIComponent(`${composer} ${work}`);
+    const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&titles=${query}&origin=*`;
+    
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        const pages = data.query.pages;
+        const page = Object.values(pages)[0];
+        if (page && page.extract) {
+            const yearMatch = page.extract.match(/\b(\d{4})\b/);
+            if (yearMatch) return yearMatch[1];
+        }
+        return null;
     } catch {
-        return `A classical composition by ${composer}.`;
+        return null;
     }
 }
 
@@ -814,7 +841,6 @@ function isLikelyClassical(trackName) {
 function guessEraFromComposer(composer) {
     const composerLower = composer.toLowerCase();
     
-    // Baroque (1600-1750)
     if (composerLower.includes('bach') || composerLower.includes('vivaldi') || 
         composerLower.includes('handel') || composerLower.includes('scarlatti') ||
         composerLower.includes('purcell') || composerLower.includes('corelli') ||
@@ -822,14 +848,12 @@ function guessEraFromComposer(composer) {
         return 'Baroque';
     }
     
-    // Classical (1750-1820)
     if (composerLower.includes('mozart') || composerLower.includes('haydn') || 
         composerLower.includes('clementi') || composerLower.includes('boccherini') ||
         composerLower.includes('salieri') || composerLower.includes('early beethoven')) {
         return 'Classical';
     }
     
-    // Romantic (1820-1900)
     if (composerLower.includes('beethoven') || composerLower.includes('chopin') || 
         composerLower.includes('brahms') || composerLower.includes('tchaikovsky') ||
         composerLower.includes('liszt') || composerLower.includes('schumann') ||
@@ -839,13 +863,11 @@ function guessEraFromComposer(composer) {
         return 'Romantic';
     }
     
-    // Impressionist (1890-1930)
     if (composerLower.includes('debussy') || composerLower.includes('ravel') ||
         composerLower.includes('satie') || composerLower.includes('faure')) {
         return 'Impressionist';
     }
     
-    // Modern/Contemporary (1900+)
     if (composerLower.includes('gershwin')||
         composerLower.includes('stravinsky') || composerLower.includes('bartok') ||
         composerLower.includes('schoenberg') || composerLower.includes('berg') ||
@@ -862,73 +884,75 @@ function guessEraFromComposer(composer) {
 
 function guessYearFromEra(era) {
     const eras = {
-        'Baroque': '1600-1750',
-        'Classical': '1750-1820', 
-        'Romantic': '1820-1900',
-        'Impressionist': '1890-1930',
-        'Contemporary': '1900-present',
-        'Modern': '1900-present'
+        'Baroque': '1650', // Midpoint for specificity
+        'Classical': '1785',
+        'Romantic': '1860',
+        'Impressionist': '1910',
+        'Contemporary': '1950',
+        'Modern': '1950'
     };
     return eras[era] || 'Unknown';
 }
 
 function extractYear(work) {
-    // Try to extract year from work data
+    // Check disambiguation and attributes for year
     if (work.disambiguation) {
         const yearMatch = work.disambiguation.match(/(\d{4})/);
         if (yearMatch) return yearMatch[1];
     }
-    return 'Unknown';
+    if (work.attributes) {
+        const dateAttr = work.attributes.find(attr => attr.type === 'date');
+        if (dateAttr && dateAttr.value.match(/(\d{4})/)) {
+            return dateAttr.value.match(/(\d{4})/)[1];
+        }
+    }
+    return null;
 }
 
 function tryGeneralClassicalSearch(trackName) {
-    // For tracks that seem classical but don't match composer:title format
-    document.getElementById('composer').textContent = 'Detecting...';
+    document.getElementById('composer').textContent = 'Unknown';
     document.getElementById('era').textContent = 'Unknown';
     document.getElementById('compositionYear').textContent = 'Unknown';
-    document.getElementById('description').textContent = 'This appears to be a classical piece. More specific information may be available when the format includes the composer name.';
+    document.getElementById('description').textContent = 'This appears to be a classical piece. Specific details are unavailable without composer information.';
 }
 
 function showFallbackInfo(composer, work) {
     const era = guessEraFromComposer(composer);
-    const yearRange = guessYearFromEra(era);
+    const year = guessYearFromEra(era);
     
-    // Create more detailed descriptions based on the work type
-    let description = `${work} by ${composer}.`;
+    let description = `${work} by ${composer}. `;
     
-    // Check if we have meaningful era information
-    if (era === 'Unknown' || yearRange === 'Unknown') {
-        description += ` There are unknown details about this piece.`;
+    if (era === 'Unknown' || year === 'Unknown') {
+        description += `Limited information available.`;
     } else {
-        // Add work-specific information only if we have era info
         if (work.toLowerCase().includes('concerto grosso')) {
-            description += ` A concerto grosso is a form of baroque concerto featuring a small group of soloists (concertino) against a full orchestra (ripieno). `;
+            description += `A concerto grosso is a baroque form featuring a small group of soloists against a full orchestra. `;
         } else if (work.toLowerCase().includes('concerto')) {
-            description += ` A concerto featuring solo instrument(s) accompanied by orchestra. `;
+            description += `A concerto featuring solo instrument(s) with orchestral accompaniment. `;
         } else if (work.toLowerCase().includes('symphony')) {
-            description += ` A large-scale orchestral composition typically in multiple movements. `;
+            description += `A large-scale orchestral work, typically in multiple movements. `;
         } else if (work.toLowerCase().includes('sonata')) {
-            description += ` A musical composition typically for a solo instrument or instrument with piano accompaniment. `;
+            description += `A composition for a solo instrument or with piano accompaniment. `;
         } else if (work.toLowerCase().includes('reflexion') || work.toLowerCase().includes('reflection')) {
-            description += ` A contemplative musical piece, often featuring introspective and meditative qualities. `;
+            description += `A contemplative piece with introspective qualities. `;
         } else if (work.toLowerCase().includes('prelude')) {
-            description += ` An introductory piece of music, often serving as an opening to a larger work. `;
+            description += `An introductory piece, often leading to a larger work. `;
         } else if (work.toLowerCase().includes('etude')) {
-            description += ` A study or exercise piece designed to develop particular technical skills. `;
+            description += `A study piece designed to develop technical skills. `;
         }
         
-        description += `This ${era.toLowerCase()} composition showcases the musical style and characteristics typical of the ${era} period (${yearRange}).`;
+        description += `This ${era.toLowerCase()} composition reflects the style of the ${era} period (circa ${year}).`;
     }
     
     document.getElementById('composer').textContent = composer;
     document.getElementById('era').textContent = era;
-    document.getElementById('compositionYear').textContent = yearRange;
+    document.getElementById('compositionYear').textContent = year;
     document.getElementById('description').textContent = description;
 }
 
 function updateClassicalDisplay(info) {
-    document.getElementById('composer').textContent = info.composer;
-    document.getElementById('era').textContent = info.era;
-    document.getElementById('compositionYear').textContent = info.year;
-    document.getElementById('description').textContent = info.description;
+    document.getElementById('composer').textContent = info.composer || 'Unknown';
+    document.getElementById('era').textContent = info.era || 'Unknown';
+    document.getElementById('compositionYear').textContent = info.year || 'Unknown';
+    document.getElementById('description').textContent = info.description || 'No information available.';
 }
