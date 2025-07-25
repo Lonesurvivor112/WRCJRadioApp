@@ -641,7 +641,7 @@ loadRecentTracks();
 updateNowPlaying();
 setInterval(updateNowPlaying, 30000);
 
-// Classical Music Information Functions - Completely NEW!
+// Classical Music Information Functions
 function getClassicalInfo(trackName) {
     // Show the classical info box
     document.getElementById('classicalInfo').style.display = 'block';
@@ -779,32 +779,44 @@ function guessEraFromComposer(composer) {
     
     // Baroque (1600-1750)
     if (composerLower.includes('bach') || composerLower.includes('vivaldi') || 
-        composerLower.includes('handel') || composerLower.includes('scarlatti')) {
+        composerLower.includes('handel') || composerLower.includes('scarlatti') ||
+        composerLower.includes('purcell') || composerLower.includes('corelli') ||
+        composerLower.includes('telemann') || composerLower.includes('rameau')) {
         return 'Baroque';
     }
     
     // Classical (1750-1820)
     if (composerLower.includes('mozart') || composerLower.includes('haydn') || 
-        composerLower.includes('early beethoven')) {
+        composerLower.includes('clementi') || composerLower.includes('boccherini') ||
+        composerLower.includes('salieri') || composerLower.includes('early beethoven')) {
         return 'Classical';
     }
     
     // Romantic (1820-1900)
     if (composerLower.includes('beethoven') || composerLower.includes('chopin') || 
         composerLower.includes('brahms') || composerLower.includes('tchaikovsky') ||
-        composerLower.includes('liszt') || composerLower.includes('schumann')) {
+        composerLower.includes('liszt') || composerLower.includes('schumann') ||
+        composerLower.includes('mendelssohn') || composerLower.includes('wagner') ||
+        composerLower.includes('verdi') || composerLower.includes('dvorak') ||
+        composerLower.includes('grieg') || composerLower.includes('rachmaninoff')) {
         return 'Romantic';
     }
     
     // Impressionist (1890-1930)
-    if (composerLower.includes('debussy') || composerLower.includes('ravel')) {
+    if (composerLower.includes('debussy') || composerLower.includes('ravel') ||
+        composerLower.includes('satie') || composerLower.includes('faure')) {
         return 'Impressionist';
     }
     
-    // Modern (1900+)
+    // Modern/Contemporary (1900+)
     if (composerLower.includes('stravinsky') || composerLower.includes('bartok') ||
-        composerLower.includes('schoenberg')) {
-        return 'Modern';
+        composerLower.includes('schoenberg') || composerLower.includes('berg') ||
+        composerLower.includes('webern') || composerLower.includes('copland') ||
+        composerLower.includes('ives') || composerLower.includes('cage') ||
+        composerLower.includes('glass') || composerLower.includes('reich') ||
+        composerLower.includes('adams') || composerLower.includes('part') ||
+        composerLower.includes('hawes') || composerLower.includes('pärt')) {
+        return 'Contemporary';
     }
     
     return 'Unknown';
@@ -816,6 +828,7 @@ function guessYearFromEra(era) {
         'Classical': '1750-1820', 
         'Romantic': '1820-1900',
         'Impressionist': '1890-1930',
+        'Contemporary': '1900-present',
         'Modern': '1900-present'
     };
     return eras[era] || 'Unknown';
