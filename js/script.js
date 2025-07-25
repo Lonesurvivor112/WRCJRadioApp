@@ -191,7 +191,7 @@ function Page() {
         }
     }
     //Unused Funtion
-    //this.refreshLyric = function (currentSong, currentArtist) {
+    this.refreshLyric = function (currentSong, currentArtist) {
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function () {
             if (this.readyState === 4 && this.status === 200) {
