@@ -637,25 +637,31 @@ function showDeezerCoverArt() {
                 .then(response => response.json())
                 .then(data => {
                     if (data.data && data.data.length > 0) {
+                        const existingOverlay = document.getElementById('deezerOverlay');
+                        if (existingOverlay) existingOverlay.remove();
                         const albumCover = data.data[0].album.cover_medium;
-
                         const target = document.getElementById("currentCoverArt");
                         if (!target) return;
 
                         const rect = target.getBoundingClientRect();
-
                         const img = document.createElement("img");
+                        img.id = 'deezerOverlay';
                         img.src = albumCover;
                         img.style.position = "absolute";
                         img.style.top = `${rect.top + window.scrollY}px`;
                         img.style.left = `${rect.left + window.scrollX}px`;
                         img.style.width = `${rect.width}px`;
                         img.style.height = `${rect.height}px`;
-                        img.style.border = "3px solid red";
+                        img.style.border = "none";
+                        img.style.borderRadius = "8px";
+                        img.style.boxShadow = "0 4px 12px rgba(0,0,0,0.3)";
+                        img.style.opacity = "0";
+                        img.style.transition = "opacity 0.5s ease-in-out";
                         img.style.zIndex = 9999;
                         img.style.pointerEvents = "none"; // so it doesn't block clicks
 
                         document.body.appendChild(img);
+                        requestAnimationFrame(() => { img.style.opacity = '1'; });
                     } else {
                         console.log("No album art found for:", currentlyPlaying);
                     }
