@@ -709,19 +709,80 @@ const eraYearRanges = {
 };
 
 // Resolve composer name dynamically using song title for context
+// Resolve composer name dynamically using song title for context
 async function resolveComposer(partialName, workTitle) {
     const normalizedPartialName = partialName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const cacheKey = `partialName}:${normalizedPartialName}:${workTitle.toLowerCase()}`;
+    const cacheKey = `${normalizedPartialName}:${workTitle.toLowerCase()}`;
 
     // Check mapping first
     if (composerNameMap[normalizedPartialName]) {
-        return composerNameMap[normalizedPartialName.toLowerCase()];
+        return composerNameMap[normalizedPartialName];
     }
 
     // Check cache
     if (composerNameCache[cacheKey]) {
         return composerNameCache[cacheKey];
     }
+
+    // Try MusicBrainz with song title context
+    try {
+        const url = `https://musicbrainz.org/ws/2/artist?query=${encodeURIComponent(partialName)}&fmt=json&limit=5`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data && data.artists && Array.isArray(data.artists) && data.artists.length > 0) {
+            let composer = data.artists.find(artist => 
+                artist.tags && Array.isArray(artist.tags) && artist.tags.some(tag => tag.name.toLowerCase().includes('classical'))
+            );
+            if (!composer) {
+                for (const artist of data.artists) {
+                    if (!artist.name) continue; // Skip if artist.name is undefined
+                    const workUrl = `https://musicbrainz.org/ws/2/work?query=${encodeURIComponent(workTitle)}%20artist:${encodeURIComponent(artist.name)}&fmt=json&limit=1`;
+                    const workResponse = await fetch(workUrl);
+                    const workData = await workResponse.json();
+                    if (workData && workData.works && Array.isArray(workData.works) && workData.works.length > 0) {
+                        composer = artist;
+                        break;
+                    }
+                }
+            }
+            composer = composer || data.artists[0];
+            if (composer && composer.name) {
+                const fullName = composer.name;
+                console.log(`Resolved ${partialName} to ${fullName} via MusicBrainz for work "${workTitle}"`);
+                composerNameCache[cacheKey] = fullName;
+                localStorage.setItem('composerNameCache', JSON.stringify(composerNameCache));
+                return fullName;
+            }
+        }
+    } catch (error) {
+        console.error(`MusicBrainz name resolution error for ${partialName} with work "${workTitle}":`, error);
+    }
+
+    // Try Wikipedia with song title context
+    try {
+        const query = encodeURIComponent(`${partialName} ${workTitle} composer`);
+        const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&list=search&srsearch=${query}&srlimit=3&origin=*`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data && data.query && data.query.search && data.query.search.length > 0) {
+            const composerPage = data.query.search.find(page => 
+                page.snippet && page.snippet.toLowerCase().includes('composer') && !page.title.includes('(disambiguation)')
+            );
+            if (composerPage) {
+                const fullName = composerPage.title;
+                console.log(`Resolved ${partialName} to ${fullName} via Wikipedia for work "${workTitle}"`);
+                composerNameCache[cacheKey] = fullName;
+                localStorage.setItem('composerNameCache', JSON.stringify(composerNameCache));
+                return fullName;
+            }
+        }
+    } catch (error) {
+        console.error(`Wikipedia name resolution error for ${partialName} with work "${workTitle}":`, error);
+    }
+
+    // Fallback to original name
+    console.warn(`Could not resolve full name for ${partialName} with work "${workTitle}", using original`);
+    return partialName;
 
     // Try MusicBrainz with song title context
     try {
