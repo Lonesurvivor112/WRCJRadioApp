@@ -55,7 +55,7 @@ function Page() {
             currentArtist.innerHTML = artist;
 
             // Refresh modal title
-            // document.getElementById('lyricsSong').innerHTML = song + ' - ' + artist;
+             document.getElementById('lyricsSong').innerHTML = song + ' - ' + artist;
 
             // Remove animation classes
             setTimeout(function () {
