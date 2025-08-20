@@ -148,26 +148,25 @@
       </div>
     </section>
   </div>
-
-  <!-- ===== Bottom Bundle Panel (Recent / Favorites) ===== -->
-  <section id="bottomPanel">
-    <div id="bottomPanelBar">
-      <button id="tabRecent" type="button">Recent</button>
-      <button id="tabFavorites" type="button">Favorites</button>
-      <button id="panelCollapse" type="button" title="Collapse/Expand">▾</button>
-    </div>
-    <div id="bottomPanelContent">
-      <div id="recentSection">
-        <h3>Recently Played</h3>
-        <ul id="recentTracksList"></ul>
-      </div>
-      <div id="favoritesSection" style="display:none;">
+<section class="panel-dual" id="favRecentSection">
+  <details open>
+    <summary><strong>Favorites / Recently Played</strong></summary>
+    <div class="dual-grid">
+      <div class="panel">
         <h3>Favorites</h3>
-        <ul id="favoritesList"></ul>
+        <ul id="favoritesList" class="list"></ul>
+        <p class="empty" id="favoritesEmpty">No favorites yet — click “Add to Favorites”.</p>
+      </div>
+      <div class="panel">
+        <h3>Recently Played</h3>
+        <!-- Reuse the same UL ID your script already populates -->
+        <ul id="recentTracksList" class="list"></ul>
+        <p class="empty" id="recentEmpty" style="display:none;">No recent tracks yet.</p>
       </div>
     </div>
-  </section>
-  <!-- ===== End Bottom Bundle Panel ===== -->
+  </details>
+</section>
+
 
   <!-- Background cover (if you decide to use it) -->
   <div id="bgCover" aria-hidden="true"></div>
