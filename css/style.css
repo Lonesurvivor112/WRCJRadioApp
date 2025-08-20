@@ -405,3 +405,20 @@ input[type=range]::-ms-thumb {
 .learn-more:hover {
     text-decoration: underline;
 }
+body {
+  font-family: sans-serif;
+  margin: 0;
+  padding: 1em;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+#currentCoverArt {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  margin: auto;
+  background-size: cover;
+  background-position: center;
+}
+
