@@ -173,5 +173,109 @@
 
   <!-- Load script last so lists exist when JS runs -->
   <script src="script.js"></script>
+  <script>
+(() => {
+  const STORAGE_KEY = 'favoriteTracks';
+  const btn = document.getElementById('addToFavoritesBtn');
+  const nowEl = document.getElementById('customNowPlaying');
+  const favList = document.getElementById('favoritesList');
+  const favEmpty = document.getElementById('favoritesEmpty');
+  const recentList = document.getElementById('recentTracksList');
+  const recentEmpty = document.getElementById('recentEmpty');
+
+  let favorites = [];
+
+  function loadFavorites() {
+    try {
+      favorites = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    } catch { favorites = []; }
+    renderFavorites();
+    syncAddButton();
+  }
+
+  function saveFavorites() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
+  }
+
+  function addFavorite(track) {
+    if (!track || track.trim() === '') return;
+    if (favorites.some(f => f.track === track)) return; // dedupe
+    favorites.unshift({ track, addedAt: Date.now() });
+    saveFavorites();
+    renderFavorites();
+    syncAddButton();
+  }
+
+  function removeFavorite(index) {
+    favorites.splice(index, 1);
+    saveFavorites();
+    renderFavorites();
+    syncAddButton();
+  }
+
+  function renderFavorites() {
+    favList.innerHTML = '';
+    if (favorites.length === 0) {
+      favEmpty.style.display = '';
+      return;
+    }
+    favEmpty.style.display = 'none';
+    favorites.forEach((item, idx) => {
+      const li = document.createElement('li');
+      const text = document.createElement('span');
+      text.className = 'text';
+      text.textContent = item.track;
+
+      const del = document.createElement('button');
+      del.className = 'btn-icon';
+      del.title = 'Remove from favorites';
+      del.setAttribute('aria-label', `Remove ${item.track} from favorites`);
+      del.textContent = '✕';
+      del.addEventListener('click', () => removeFavorite(idx));
+
+      li.appendChild(text);
+      li.appendChild(del);
+      favList.appendChild(li);
+    });
+  }
+
+  function currentTrack() {
+    return (nowEl?.innerText || '').trim();
+  }
+
+  function syncAddButton() {
+    const track = currentTrack();
+    const exists = favorites.some(f => f.track === track);
+    btn.disabled = !track || exists;
+    btn.title = exists ? 'Already in favorites' : 'Add current track to Favorites';
+  }
+
+  // When user clicks the star button
+  btn?.addEventListener('click', () => {
+    const track = currentTrack();
+    addFavorite(track);
+  });
+
+  // Watch for changes in the now playing text to update button state
+  if (nowEl) {
+    const obs = new MutationObserver(syncAddButton);
+    obs.observe(nowEl, { childList: true, characterData: true, subtree: true });
+  }
+
+  // Watch for changes to the recent list that your existing script fills,
+  // so we can show/hide "empty" hint accordingly (without overriding your function).
+  if (recentList && recentEmpty) {
+    const recentObs = new MutationObserver(() => {
+      const hasItems = recentList.children.length > 0;
+      recentEmpty.style.display = hasItems ? 'none' : '';
+    });
+    recentObs.observe(recentList, { childList: true });
+  }
+
+  // Init
+  loadFavorites();
+})();
+</script>
+
 </body>
 </html>
