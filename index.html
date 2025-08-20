@@ -1,31 +1,35 @@
-<!DOCTYPE html>
-<html lang="en-US">
 
-<head> 
-<style>
-#customNowPlaying, #customRecentTracks {
-    background-color: rgba(0, 0, 0, 0.5);
-    color: white;
-    padding: 10px 15px;
-    border-radius: 8px;
-    max-width: 400px;
-    margin: 10px auto;
-    font-family: sans-serif;
-}
-</style>
+updated_html = """<!DOCTYPE html>
+<html lang="en-US">
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>RadioPlayer</title>
-
     <link rel="icon" type="image/png" href="img/cover.png" />
     <link rel="stylesheet" href="css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="css/animate.css">
     <link rel="stylesheet" href="css/style.css?v2322">
+    <style>
+        /* Ensure cover art is square on mobile */
+        .cover-album {
+            width: 100%;
+            max-width: 300px;
+            margin: auto;
+        }
+        #currentCoverArt {
+            width: 100%;
+            padding-top: 100%;
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+        }
+        /* Responsive container */
+        .container {
+            padding: 0 15px;
+        }
+    </style>
 </head>
-
 <body>
-
     <div class="cover-site">
         <div id="bgCover"></div>
         <div class="bg-mask"></div>
@@ -47,10 +51,8 @@
                                     <div class="col-12">
                                         <div class="info-current-song"> </div>
                                         <div id="customNowPlaying" style="font-size: 1.2em; font-weight: bold; margin-top: 20px;">
-                                        Loading current track...
+                                            Loading current track...
                                         </div>
-                                        
-                                        <!-- Classical Music Information Box -->
                                         <div id="classicalInfo" style="background-color: rgba(0, 0, 0, 0.6); color: white; padding: 15px; border-radius: 10px; margin-top: 15px; display: none;">
                                             <h4 style="margin: 0 0 10px 0; color: #ffd700;">Classical Details</h4>
                                             <div id="composerEra" style="margin-bottom: 8px;">
@@ -74,8 +76,7 @@
                                             <div class="col-12 col-md-6 text-center">
                                                 <div class="row volume-control">
                                                     <div class="volume-icon col-1"><i class="fa fa-volume-up"></i></div>
-                                                    <div class="volume-slide col-10 text-center"><input type="range" id="volume"
-                                                            step="1" min="0" max="100" value="80"></div>
+                                                    <div class="volume-slide col-10 text-center"><input type="range" id="volume" step="1" min="0" max="100" value="80"></div>
                                                     <div class="percentual-volume col-12">Volume <span id="volIndicator">...</span>%</div>
                                                 </div>
                                             </div>
@@ -94,19 +95,18 @@
                 <div class="row historic">
                     <div class="col-12">
                         <h2>Recent Songs</h2>      
-                    <div id="customRecentTracks">
-                    <h3>Recently Played</h3>
-                    <ul id="recentTracksList"></ul>
-                    </div>
+                        <div id="customRecentTracks">
+                            <h3>Recently Played</h3>
+                            <ul id="recentTracksList"></ul>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
     </main>
-
     <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"></script>
     <script type="text/javascript" src="js/bootstrap.min.js"></script>
     <script type="text/javascript" src="js/script.js"></script>
-	</body>
+</body>
 </html>
