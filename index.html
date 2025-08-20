@@ -5,6 +5,50 @@
   <title>RadioPlayer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+   <style>
+  /* Hide the existing "Recent Songs / history" area so script can still target it safely */
+  #historicSong,
+  h3, h4 {
+    /* If your old headings/containers have specific IDs/classes, hide those instead */
+  }
+  /* A safer, targeted rule (adjust selectors to your actual markup) */
+  #historicSong { display: none !important; }
+
+  /* New panel styling */
+  .panel-dual { margin: 1.25rem 0; }
+  .panel-dual details {
+    border: 1px solid #d7d7d7; border-radius: 8px; background: #fff;
+    box-shadow: 0 4px 14px rgba(0,0,0,.06); overflow: hidden;
+  }
+  .panel-dual summary {
+    cursor: pointer; padding: .9rem 1.1rem; font-weight: 600; list-style: none;
+    background: linear-gradient(180deg,#fafafa,#f3f3f3);
+  }
+  .panel-dual summary::-webkit-details-marker { display: none; }
+
+  .dual-grid { display: grid; gap: 1rem; padding: 1rem; }
+  @media (min-width: 700px) { .dual-grid { grid-template-columns: 1fr 1fr; } }
+
+  .panel { background: #fff; border: 1px solid #eee; border-radius: 8px; padding: .75rem; }
+  .panel h3 { margin: .25rem 0 .75rem; font-size: 1.05rem; }
+  .list { list-style: none; margin: 0; padding: 0; }
+  .list li { padding: .45rem .5rem; border-bottom: 1px dashed #e8e8e8; display: flex; gap: .5rem; align-items: center; }
+  .list li:last-child { border-bottom: 0; }
+  .list .text { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .btn-icon {
+    border: none; background: transparent; cursor: pointer; color: #888; font-size: .95rem;
+  }
+  .btn-icon:hover { color: #444; }
+  .btn-add-fav {
+    display: inline-flex; gap: .5rem; align-items: center;
+    border: 1px solid #d0d0d0; border-radius: 20px;
+    padding: .4rem .8rem; background: #fff; cursor: pointer; font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0,0,0,.05);
+  }
+  .btn-add-fav[disabled] { opacity: .5; cursor: not-allowed; }
+  .empty { color: #888; font-style: italic; padding: .25rem .5rem; }
+ 
     body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:#0e0e0e; color:#eee; }
     a { color:#4da3ff; }
     .wrap { max-width:960px; margin:0 auto; padding:16px 16px 90px; } /* bottom padding so content doesn't hide behind sticky panel */
